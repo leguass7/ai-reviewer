@@ -29922,6 +29922,22 @@ exports.wait = wait;
 
 /***/ }),
 
+/***/ 3848:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getEventData = getEventData;
+const fs_1 = __nccwpck_require__(9896);
+function getEventData() {
+    const eventData = JSON.parse((0, fs_1.readFileSync)(process.env.GITHUB_EVENT_PATH ?? '', 'utf8'));
+    return eventData;
+}
+
+
+/***/ }),
+
 /***/ 1730:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -29950,20 +29966,30 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
-const github_1 = __importDefault(__nccwpck_require__(3228));
+const github = __importStar(__nccwpck_require__(3228));
 const helpers_1 = __nccwpck_require__(253);
+const github_1 = __nccwpck_require__(3848);
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
     try {
+        const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
+        const octokit = github.getOctokit(GITHUB_TOKEN);
+        const eventData = (0, github_1.getEventData)();
+        console.log(`Event data:`, JSON.stringify(eventData, undefined, 2));
+        //   const { data: pullRequest } = await octokit.rest.pulls.get({
+        //     owner: 'octokit',
+        //     repo: 'rest.js',
+        //     pull_number: 123,
+        //     mediaType: {
+        //       format: 'diff'
+        //     }
+        // });
         const ms = core.getInput('milliseconds');
         // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
         core.debug(`Waiting ${ms} milliseconds ...`);
@@ -29973,7 +29999,7 @@ async function run() {
         core.debug(new Date().toTimeString());
         // Set outputs for other workflow steps to use
         core.setOutput('time', new Date().toTimeString());
-        const context = github_1.default?.context?.payload || {};
+        const context = github?.context;
         const payload = JSON.stringify(context, undefined, 2);
         console.log(`The event payload: ${payload}`);
     }

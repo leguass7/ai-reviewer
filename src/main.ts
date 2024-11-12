@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
-import github from '@actions/github';
+import * as github from '@actions/github';
 import { wait } from './helpers';
+import { getEventData } from './lib/github';
 
 /**
  * The main function for the action.
@@ -8,6 +9,20 @@ import { wait } from './helpers';
  */
 export async function run(): Promise<void> {
   try {
+    const GITHUB_TOKEN: string = core.getInput('GITHUB_TOKEN');
+    const octokit = github.getOctokit(GITHUB_TOKEN);
+
+    const eventData = getEventData();
+    console.log(`Event data:`, JSON.stringify(eventData, undefined, 2));
+    //   const { data: pullRequest } = await octokit.rest.pulls.get({
+    //     owner: 'octokit',
+    //     repo: 'rest.js',
+    //     pull_number: 123,
+    //     mediaType: {
+    //       format: 'diff'
+    //     }
+    // });
+
     const ms: string = core.getInput('milliseconds');
 
     // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
@@ -21,7 +36,7 @@ export async function run(): Promise<void> {
     // Set outputs for other workflow steps to use
     core.setOutput('time', new Date().toTimeString());
 
-    const context = github?.context?.payload || {};
+    const context = github?.context;
     const payload = JSON.stringify(context, undefined, 2);
     console.log(`The event payload: ${payload}`);
   } catch (error) {
