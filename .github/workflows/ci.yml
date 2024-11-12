@@ -5,18 +5,19 @@ jobs:
   hello_world_job:
     runs-on: ubuntu-latest
 
-    name: A job to say hello
+    name: AI Action Code Reviewer
     steps:
       # To use this repository's private action,
       # you must check out the repository
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Hello world action step
+      - name: AI Code Reviewer
         uses: ./ # Uses an action in the root directory
-        id: hello
+        id: aireviewer
         with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           milliseconds: 3010
       # Use the output from the `hello` step
       - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+        run: echo "The time was ${{ steps.aireviewer.outputs.time }}"

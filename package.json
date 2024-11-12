@@ -1,7 +1,7 @@
 {
   "name": "ai-reviewer",
   "version": "1.0.0",
-  "description": "Action Github",
+  "description": "Action Github - AI Code Reviewer",
   "scripts": {
     "build": "tsc",
     "ncc": "ncc build --source-map --license licenses.txt",

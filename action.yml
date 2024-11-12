@@ -1,5 +1,5 @@
-name: 'Hello World'
-description: 'Greet someone and record the time'
+name: 'AI Code Reviewer'
+description: 'A GitHub Action to review your code.'
 author: 'Leandro Sbrissa'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
@@ -9,6 +9,9 @@ branding:
 
 # Define your inputs here.
 inputs:
+  GITHUB_TOKEN:
+    description: "GitHub token to interact with the repository."
+    required: true
   milliseconds:
     description: 'Your input description here'
     required: true
