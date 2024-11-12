@@ -29979,9 +29979,9 @@ const github_1 = __nccwpck_require__(3848);
 async function run() {
     try {
         const GITHUB_TOKEN = core.getInput('GITHUB_TOKEN');
-        const octokit = github.getOctokit(GITHUB_TOKEN);
+        // const octokit = github.getOctokit(GITHUB_TOKEN);
         const eventData = (0, github_1.getEventData)();
-        console.log(`Event data:`, JSON.stringify(eventData, undefined, 2));
+        console.log(`Event data:`, GITHUB_TOKEN, JSON.stringify(eventData, undefined, 2));
         //   const { data: pullRequest } = await octokit.rest.pulls.get({
         //     owner: 'octokit',
         //     repo: 'rest.js',

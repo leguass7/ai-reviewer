@@ -10,10 +10,10 @@ import { getEventData } from './lib/github';
 export async function run(): Promise<void> {
   try {
     const GITHUB_TOKEN: string = core.getInput('GITHUB_TOKEN');
-    const octokit = github.getOctokit(GITHUB_TOKEN);
+    // const octokit = github.getOctokit(GITHUB_TOKEN);
 
     const eventData = getEventData();
-    console.log(`Event data:`, JSON.stringify(eventData, undefined, 2));
+    console.log(`Event data:`, GITHUB_TOKEN, JSON.stringify(eventData, undefined, 2));
     //   const { data: pullRequest } = await octokit.rest.pulls.get({
     //     owner: 'octokit',
     //     repo: 'rest.js',
