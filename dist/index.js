@@ -30024,6 +30024,7 @@ async function getPRDetails() {
         pull_number: 10
     };
     const octokit = github.getOctokit(token);
+    console.log('PARAMS: \n', (0, helpers_1.stringify)(params));
     const response = await octokit.rest.pulls.get(params);
     const result = {
         action: event.action,

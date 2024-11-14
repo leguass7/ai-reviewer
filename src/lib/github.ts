@@ -60,6 +60,7 @@ export async function getPRDetails(): Promise<PRDetails | null> {
 
   const octokit = github.getOctokit(token);
 
+  console.log('PARAMS: \n', stringify(params));
   const response = await octokit.rest.pulls.get(params);
 
   const result: PRDetails = {
