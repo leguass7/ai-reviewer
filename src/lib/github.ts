@@ -49,7 +49,7 @@ export async function getPRDetails(): Promise<PRDetails | null> {
 
   const event = getEventData();
 
-  console.log('EVENT:', event);
+  console.log('EVENT: \n', event);
 
   const params = {
     owner: event.repository.owner.login,
