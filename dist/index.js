@@ -29923,10 +29923,14 @@ function wrappy (fn, cb) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.wait = void 0;
+exports.stringify = stringify;
 const wait = (timeout) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
 };
 exports.wait = wait;
+function stringify(obj) {
+    return JSON.stringify(obj, undefined, 2);
+}
 
 
 /***/ }),
@@ -29999,6 +30003,7 @@ exports.compareCommits = compareCommits;
 const fs_1 = __nccwpck_require__(9896);
 const github = __importStar(__nccwpck_require__(3228));
 const core = __importStar(__nccwpck_require__(7484));
+const helpers_1 = __nccwpck_require__(253);
 function getGithubToken() {
     return core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN || '';
 }
@@ -30012,7 +30017,7 @@ async function getPRDetails() {
     if (!token)
         throw new Error('GITHUB_TOKEN is not set');
     const event = getEventData();
-    console.log('EVENT:', event);
+    console.log('EVENT: \n', (0, helpers_1.stringify)(event));
     const params = {
         owner: event.repository.owner.login,
         repo: event.repository.name,
