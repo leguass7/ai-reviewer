@@ -1,5 +1,10 @@
 on:
-  push:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+permissions: write-all
 
 jobs:
   hello_world_job:

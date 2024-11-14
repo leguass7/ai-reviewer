@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { wait } from './helpers';
-import { getEventData } from './lib/github';
+import { parsedDifference } from './lib/diff';
+import { getPRDetails } from './lib/github';
 
 /**
  * The main function for the action.
@@ -9,19 +10,11 @@ import { getEventData } from './lib/github';
  */
 export async function run(): Promise<void> {
   try {
-    const GITHUB_TOKEN: string = core.getInput('GITHUB_TOKEN');
-    // const octokit = github.getOctokit(GITHUB_TOKEN);
+    const prDetails = await getPRDetails();
+    if (!prDetails) throw new Error('PR details not found');
 
-    const eventData = getEventData();
-    console.log(`Event data:`, GITHUB_TOKEN, JSON.stringify(eventData, undefined, 2));
-    //   const { data: pullRequest } = await octokit.rest.pulls.get({
-    //     owner: 'octokit',
-    //     repo: 'rest.js',
-    //     pull_number: 123,
-    //     mediaType: {
-    //       format: 'diff'
-    //     }
-    // });
+    const parsedDiff = await parsedDifference(prDetails);
+    if (!parsedDiff) throw new Error('diff not found');
 
     const ms: string = core.getInput('milliseconds');
 
@@ -38,7 +31,7 @@ export async function run(): Promise<void> {
 
     const context = github?.context;
     const payload = JSON.stringify(context, undefined, 2);
-    console.log(`The event payload: ${payload}`);
+    console.log(`CONTEXT PAYLOAD: ${payload}`);
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message);
