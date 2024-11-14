@@ -55,7 +55,7 @@ export async function getPRDetails(): Promise<PRDetails | null> {
   const params = {
     owner: event.repository.owner.login,
     repo: event.repository.name,
-    pull_number: 10
+    pull_number: event.number
   };
 
   const octokit = github.getOctokit(token);

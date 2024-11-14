@@ -30021,7 +30021,7 @@ async function getPRDetails() {
     const params = {
         owner: event.repository.owner.login,
         repo: event.repository.name,
-        pull_number: 10
+        pull_number: event.number
     };
     const octokit = github.getOctokit(token);
     console.log('PARAMS: \n', (0, helpers_1.stringify)(params));
