@@ -3,6 +3,7 @@ import * as github from '@actions/github';
 import { wait } from './helpers';
 import { parsedDifference } from './lib/diff';
 import { getPRDetails } from './lib/github';
+import { assemblesContentToAnalyze } from './lib/content';
 
 /**
  * The main function for the action.
@@ -14,16 +15,14 @@ export async function run(): Promise<void> {
     if (!prDetails) throw new Error('PR details not found');
 
     const parsedDiff = await parsedDifference(prDetails);
-    if (!parsedDiff) throw new Error('diff not found');
+    if (!parsedDiff || !parsedDiff?.length) throw new Error('diff not found');
 
-    const ms: string = core.getInput('milliseconds');
-
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`);
+    const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
+    contents.map(c => console.log('CONTENTS:', c.filename, '\n', c.content));
 
     // Log the current timestamp, wait, then log the new timestamp
     core.debug(new Date().toTimeString());
-    await wait(parseInt(ms, 10));
+    await wait(parseInt('1000', 10));
     core.debug(new Date().toTimeString());
 
     // Set outputs for other workflow steps to use
@@ -31,7 +30,7 @@ export async function run(): Promise<void> {
 
     const context = github?.context;
     const payload = JSON.stringify(context, undefined, 2);
-    console.log(`CONTEXT PAYLOAD: ${payload}`);
+    // console.log(`CONTEXT PAYLOAD: ${payload}`);
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message);

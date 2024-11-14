@@ -22,7 +22,7 @@ jobs:
         id: aireviewer
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          milliseconds: 3010
+          exclude: '**/*.json, **/*.md, **/*.map'
       # Use the output from the `hello` step
       - name: Get the output time
         run: echo "The time was ${{ steps.aireviewer.outputs.time }}"
