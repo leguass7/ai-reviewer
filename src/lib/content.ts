@@ -21,17 +21,16 @@ function chunkToContent(chunk: Chunk): string {
 
   return `
 ${chunk?.content}
-
 ${changeLines}
-
 `;
 }
 
-type Content = {
+export type Content = {
   filename: string;
   content: string;
   prTitle: string;
   prDescription: string;
+  prompt?: string;
 };
 export function assemblesContentToAnalyze(parsedDiff: File[], prDetails: PRDetails): Content[] {
   const content = parsedDiff.filter(removeDeletedFilter).reduce((acc, file) => {

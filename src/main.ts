@@ -4,6 +4,7 @@ import { wait } from './helpers';
 import { parsedDifference } from './lib/diff';
 import { getPRDetails } from './lib/github';
 import { assemblesContentToAnalyze } from './lib/content';
+import { analyzeCode } from './lib/openapi';
 
 /**
  * The main function for the action.
@@ -20,13 +21,13 @@ export async function run(): Promise<void> {
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
     contents.map(c => console.log('CONTENTS:', c.filename, '\n', c.content));
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString());
+    const comments = await analyzeCode(contents, prDetails);
+    comments.forEach(c => console.log('COMMENTS:', c?.prompt));
+
     await wait(parseInt('1000', 10));
-    core.debug(new Date().toTimeString());
 
     // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString());
+    core.setOutput('countFiles', contents?.length);
 
     const context = github?.context;
     const payload = JSON.stringify(context, undefined, 2);

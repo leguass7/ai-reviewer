@@ -36,12 +36,12 @@ export async function parsedDifference(params: PRDetails) {
 
   const parsedDiff = !!diff ? parseDiff(diff) : null;
   const result = excludeFilter(parsedDiff);
-  result?.forEach((file: File) => {
-    console.log('parsedDiff file chunks:', file);
-    file.chunks.forEach((chunk: Chunk) => {
-      console.log('parsedDiff chunk changes:', chunk.content, '\n', chunk.changes);
-    });
-  });
+  // result?.forEach((file: File) => {
+  //   console.log('parsedDiff file chunks:', file);
+  //   file.chunks.forEach((chunk: Chunk) => {
+  //     console.log('parsedDiff chunk changes:', chunk.content, '\n', chunk.changes);
+  //   });
+  // });
 
   return result;
 }

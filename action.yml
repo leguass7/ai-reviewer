@@ -19,8 +19,8 @@ inputs:
 
 # Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  countFiles:
+    description: 'Quantidade de arquivos analisados'
 
 
 runs:
