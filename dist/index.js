@@ -36563,21 +36563,28 @@ async function compareCommits({ owner, repo, baseSha, headSha }) {
 async function createReviewComment({ owner, repo, pullNumber }, comments) {
     const token = getGithubToken();
     const octokit = github.getOctokit(token);
-    const response = await octokit.rest.pulls.createReview({
-        owner,
-        repo,
-        pull_number: pullNumber,
-        comments,
-        event: 'COMMENT'
-    });
-    if (!response) {
-        core.info('Failed to create review comment');
-        process.exit(0);
+    try {
+        const response = await octokit.rest.pulls.createReview({
+            owner,
+            repo,
+            pull_number: pullNumber,
+            comments,
+            event: 'COMMENT'
+        });
+        if (!response) {
+            core.info('Failed to create review comment');
+            process.exit(0);
+        }
+        if (response?.data.html_url) {
+            core.notice(`Review comment created: ${response?.data.html_url}`);
+        }
+        return response;
     }
-    if (response?.data.html_url) {
-        core.notice(`Review comment created: ${response?.data.html_url}`);
+    catch (error) {
+        // @ts-ignore
+        core.setFailed(`Failed to create review comment: ${error?.message}`);
+        return null;
     }
-    return response;
 }
 
 
@@ -36664,6 +36671,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.analyzeCode = analyzeCode;
 const core = __importStar(__nccwpck_require__(7484));
 const helpers_1 = __nccwpck_require__(253);
+const github_1 = __nccwpck_require__(3848);
 const assistant_1 = __nccwpck_require__(2662);
 const openai_service_1 = __nccwpck_require__(619);
 const prompt_1 = __nccwpck_require__(762);
@@ -36694,14 +36702,25 @@ async function analyzeCode(contentList, pRDetails) {
     const additionalInstructions = (0, prompt_1.getAdditionalInstructions)(language);
     const createTask = (prompt) => {
         const handler = async ({ jobId }) => {
-            console.log('jobId', jobId, 'prompt', prompt);
+            core.info(`Processing job ${jobId} ${prompt.filename}`);
             const content = `${prompt?.prompt}`;
             const metadata = { filename: prompt.filename };
             const created = await openAiService.assistantThreadCreateMessage(thread.id, content, metadata);
             if (!created)
                 return { reviews: [], success: false };
             const response = await openAiService.assistantCreateRunner(thread.id, { additionalInstructions });
-            return { ...safeReturnDto(response), path: prompt.filename };
+            const comment = { ...safeReturnDto(response), path: prompt.filename };
+            if (!comment?.success || !comment?.reviews?.length) {
+                core.info(`No comments found for ${prompt.filename}`);
+                return comment;
+            }
+            const batch = comment.reviews.map(review => ({ body: (0, prompt_1.bodyComment)(review), path: prompt.filename, line: review.lineNumber }));
+            const resComment = await (0, github_1.createReviewComment)(pRDetails, batch);
+            const htmlUrl = resComment?.data?.html_url;
+            if (htmlUrl) {
+                core.notice(`Comment created for ${prompt.filename}: ${resComment?.data?.html_url}`);
+            }
+            return { ...comment, htmlUrl };
         };
         return handler;
     };
@@ -36710,21 +36729,21 @@ async function analyzeCode(contentList, pRDetails) {
         core.info('No comments found');
         process.exit(0);
     }
-    const comments = aiComments
-        ?.filter(({ success, data }) => success && !!data?.success && !!data?.reviews?.length)
-        .reduce((acc, { data }) => {
-        const { reviews, path } = data;
-        reviews.forEach(review => {
-            acc.push({ body: (0, prompt_1.bodyComment)(review), path: path || '', line: review.lineNumber });
-        });
-        return acc;
-    }, []);
-    if (!comments?.length) {
-        core.info('No comments found');
-        process.exit(0);
-    }
+    // const comments: Comment[] = aiComments
+    //   ?.filter(({ success, data }) => success && !!data?.success && !!data?.reviews?.length)
+    //   .reduce((acc, { data }) => {
+    //     const { reviews, path } = data as AiResponse;
+    //     reviews.forEach(review => {
+    //       acc.push({ body: bodyComment(review), path: path || '', line: review.lineNumber });
+    //     });
+    //     return acc;
+    //   }, [] as Comment[]);
+    // if (!comments?.length) {
+    //   core.info('No comments found');
+    //   process.exit(0);
+    // }
     await openAiService.assistentRemoveThread(thread.id);
-    return comments;
+    return aiComments;
 }
 
 
@@ -36735,12 +36754,32 @@ async function analyzeCode(contentList, pRDetails) {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OpenAiService = void 0;
-const openai_1 = __importDefault(__nccwpck_require__(2583));
+const openai_1 = __importStar(__nccwpck_require__(2583));
 const helpers_1 = __nccwpck_require__(253);
 const tool = {
     type: 'function',
@@ -36779,7 +36818,8 @@ const tool = {
         }
     }
 };
-const defaultTimeout = 8 * 60 * 1000;
+// timeout padrão de 3 minutos
+const defaultTimeout = 3 * 60 * 1000;
 class OpenAiService {
     apiKey;
     assistantId;
@@ -36816,8 +36856,13 @@ class OpenAiService {
     }
     /** Criar um tópico de conversa na OpenAi */
     async assistantCreateThread(body, options) {
-        const thread = await this.openai.beta.threads.create(body, options);
-        return thread || null;
+        try {
+            const thread = await this.openai.beta.threads.create(body, options);
+            return thread || null;
+        }
+        catch (error) {
+            return null;
+        }
     }
     /** Remover um tópico de conversa na OpenAi  */
     async assistentRemoveThread(threadId) {
@@ -36833,9 +36878,14 @@ class OpenAiService {
     }
     /** Criar uma mensagem de usuário no tópico de conversa na OpenAi */
     async assistantThreadCreateMessage(threadId, body, metadata) {
-        const message = { role: 'user', content: body, metadata };
-        const thread = await this.openai.beta.threads.messages.create(threadId, message);
-        return thread || null;
+        try {
+            const message = { role: 'user', content: body, metadata };
+            const thread = await this.openai.beta.threads.messages.create(threadId, message);
+            return thread || null;
+        }
+        catch {
+            return null;
+        }
     }
     async assistantCreateRunner(threadId, { timeout = defaultTimeout, ...options }) {
         // esperar 10ms a menos que o timeout para garantir que o timeout seja acionado
@@ -36847,8 +36897,16 @@ class OpenAiService {
         });
         const params = this.prepareParameters(options);
         const execute = new Promise(async (resolve) => {
-            const stream = this.openai.beta.threads.runs.stream(threadId, params, { timeout });
-            this.configureStream(stream, resolve, { threadId });
+            try {
+                const stream = this.openai.beta.threads.runs.stream(threadId, params, { timeout });
+                this.configureStream(stream, resolve, { threadId });
+            }
+            catch (error) {
+                let err = null;
+                if (error instanceof openai_1.OpenAIError)
+                    err = error.message;
+                resolve({ success: false, threadId, error: err });
+            }
         });
         try {
             const result = (await Promise.race([waiting, execute]));
@@ -36995,9 +37053,10 @@ async function run() {
         const parsedDiff = await (0, diff_1.parsedDifference)(prDetails);
         const contents = (0, content_1.assemblesContentToAnalyze)(parsedDiff, prDetails);
         const comments = await (0, openai_1.analyzeCode)(contents, prDetails);
-        const resComment = await (0, github_1.createReviewComment)(prDetails, comments);
+        // const resComment = await createReviewComment(prDetails, comments);
         // Set outputs for other workflow steps to use
-        core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
+        // core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
+        core.setOutput('commentUrl', ``);
         core.setOutput('countComments', comments?.length);
         core.setOutput('countFiles', contents?.length);
         const context = github?.context;
