@@ -16,6 +16,10 @@ inputs:
     description: "Glob patterns to exclude files from the diff analysis"
     required: false
     default: ""
+  language:
+    description: "Language of the code to be analyzed"
+    required: false
+    default: "pt-br"
   OPENAI_API_KEY:
     description: "OpenAI API key for GPT."
     required: true

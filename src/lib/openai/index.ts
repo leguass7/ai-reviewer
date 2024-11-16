@@ -1,12 +1,12 @@
-import { extractJson, stringify } from 'src/helpers';
+import * as core from '@actions/core';
+import { extractJson } from 'src/helpers';
 import { Content } from '../content';
 import { Comment, PRDetails } from '../github';
-import { getAiResponse, getOpenAiSettings } from './assistant';
-import { AiComment, AiResponse } from './interfaces';
+import { getOpenAiSettings } from './assistant';
+import { AiResponse } from './interfaces';
 import { OpenAiService, RunnerResult, RunnerResultSuccess } from './openai.service';
 import { bodyComment, createFirstThreadMessage, createPrompt } from './prompt';
 import { addQueue, QueueTaskHandler } from './queue';
-import * as core from '@actions/core';
 
 function safeReturnDto(d: RunnerResult | null): AiResponse {
   if (d?.success) {
