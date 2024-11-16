@@ -130,22 +130,27 @@ export async function createReviewComment({ owner, repo, pullNumber }: PRDetails
   const token = getGithubToken();
   const octokit = github.getOctokit(token);
 
-  const response = await octokit.rest.pulls.createReview({
-    owner,
-    repo,
-    pull_number: pullNumber,
-    comments,
-    event: 'COMMENT'
-  });
+  try {
+    const response = await octokit.rest.pulls.createReview({
+      owner,
+      repo,
+      pull_number: pullNumber,
+      comments,
+      event: 'COMMENT'
+    });
 
-  if (!response) {
-    core.info('Failed to create review comment');
-    process.exit(0);
+    if (!response) {
+      core.info('Failed to create review comment');
+      process.exit(0);
+    }
+
+    if (response?.data.html_url) {
+      core.notice(`Review comment created: ${response?.data.html_url}`);
+    }
+    return response;
+  } catch (error) {
+    // @ts-ignore
+    core.setFailed(`Failed to create review comment: ${error?.message}`);
+    return null;
   }
-
-  if (response?.data.html_url) {
-    core.notice(`Review comment created: ${response?.data.html_url}`);
-  }
-
-  return response;
 }
