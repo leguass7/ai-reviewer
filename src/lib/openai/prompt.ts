@@ -33,6 +33,10 @@ ${content.content}
 `;
 }
 
+export function getAdditionalInstructions(language: string): string {
+  return `Não faça comentários positivos ou elogios e responda no idiôma '${language}'`;
+}
+
 export function bodyComment({ reviewComment, reason }: AiComment): string {
   return `
 ${reviewComment || ''}

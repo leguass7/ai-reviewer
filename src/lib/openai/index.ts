@@ -5,7 +5,7 @@ import { Comment, PRDetails } from '../github';
 import { getOpenAiSettings } from './assistant';
 import { AiResponse } from './interfaces';
 import { OpenAiService, RunnerResult, RunnerResultSuccess } from './openai.service';
-import { bodyComment, createFirstThreadMessage, createPrompt } from './prompt';
+import { bodyComment, createFirstThreadMessage, createPrompt, getAdditionalInstructions } from './prompt';
 import { addQueue, QueueTaskHandler } from './queue';
 
 function safeReturnDto(d: RunnerResult | null): AiResponse {
@@ -36,7 +36,7 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
     process.exit(1);
   }
 
-  const additionalInstructions = `Responda no idiôma '${language}'`;
+  const additionalInstructions = getAdditionalInstructions(language);
 
   const createTask = (prompt: Content) => {
     const handler: QueueTaskHandler<AiResponse> = async ({ jobId }) => {
@@ -71,6 +71,8 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
     core.info('No comments found');
     process.exit(0);
   }
+
+  await openAiService.assistentRemoveThread(thread.id);
 
   return comments;
 }
