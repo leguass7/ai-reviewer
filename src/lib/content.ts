@@ -1,5 +1,6 @@
 import type { File, Chunk } from 'parse-diff';
 import type { PRDetails } from './github';
+import * as core from '@actions/core';
 
 function removeDeletedFilter(file: File) {
   const conditions = [
@@ -32,6 +33,7 @@ export type Content = {
   prDescription: string;
   prompt?: string;
 };
+
 export function assemblesContentToAnalyze(parsedDiff: File[], prDetails: PRDetails): Content[] {
   const content = parsedDiff.filter(removeDeletedFilter).reduce((acc, file) => {
     acc.push({
@@ -42,6 +44,11 @@ export function assemblesContentToAnalyze(parsedDiff: File[], prDetails: PRDetai
     });
     return acc;
   }, [] as Content[]);
+
+  if (!content?.length) {
+    core.info('No files found to analyze');
+    process.exit(0);
+  }
 
   return content;
 }

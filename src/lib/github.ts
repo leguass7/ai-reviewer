@@ -1,10 +1,14 @@
 import { readFileSync } from 'fs';
 import * as github from '@actions/github';
 import * as core from '@actions/core';
-import { stringify } from 'src/helpers';
 
 export function getGithubToken(): string {
-  return core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN || '';
+  const token = core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN;
+  if (!token) {
+    core.setFailed('GITHUB_TOKEN is not set');
+    process.exit(1);
+  }
+  return token;
 }
 
 type PREventData = {
@@ -30,7 +34,11 @@ type PREventData = {
 export function getEventData(): PREventData {
   const eventPath = process.env.GITHUB_EVENT_PATH ?? '';
   const eventData = JSON.parse(readFileSync(eventPath ?? '', 'utf8'));
-  return eventData;
+  if (!eventData) {
+    core.setFailed(`Event data not found: ${eventPath}`);
+    process.exit(1);
+  }
+  return eventData as PREventData;
 }
 
 export type PRDetails = {
@@ -44,13 +52,11 @@ export type PRDetails = {
   headSha?: string; // after
 };
 
-export async function getPRDetails(): Promise<PRDetails | null> {
+export async function getPRDetails(): Promise<PRDetails> {
   const token = getGithubToken();
-  if (!token) throw new Error('GITHUB_TOKEN is not set');
-
   const event = getEventData();
 
-  console.log('EVENT: \n', stringify(event));
+  core.notice(`PR Event: ${event?.action}`);
 
   const params = {
     owner: event.repository.owner.login,
@@ -59,9 +65,12 @@ export async function getPRDetails(): Promise<PRDetails | null> {
   };
 
   const octokit = github.getOctokit(token);
-
-  console.log('PARAMS: \n', stringify(params));
   const response = await octokit.rest.pulls.get(params);
+
+  if (!response) {
+    core.setFailed('PR details not found');
+    process.exit(1);
+  }
 
   const result: PRDetails = {
     action: event.action,
@@ -79,7 +88,6 @@ export async function getPRDetails(): Promise<PRDetails | null> {
 
 export async function getDiff(owner: string, repo: string, pullNumber: number): Promise<string | null> {
   const token = getGithubToken();
-  if (!token) throw new Error('GITHUB_TOKEN is not set');
 
   const octokit = github.getOctokit(token);
   const response = await octokit.rest.pulls.get({
@@ -94,7 +102,6 @@ export async function getDiff(owner: string, repo: string, pullNumber: number): 
 
 export async function compareCommits({ owner, repo, baseSha, headSha }: PRDetails) {
   const token = getGithubToken();
-  if (!token) throw new Error('GITHUB_TOKEN is not set');
 
   if (!baseSha || !headSha) return null;
 

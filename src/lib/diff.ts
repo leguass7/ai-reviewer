@@ -1,5 +1,5 @@
 import { compareCommits, getDiff, PRDetails } from './github';
-import parseDiff, { Chunk, File } from 'parse-diff';
+import parseDiff, { type File } from 'parse-diff';
 import * as core from '@actions/core';
 import { minimatch } from 'minimatch';
 import { stringify } from 'src/helpers';
@@ -15,7 +15,7 @@ export function excludeFilter(files: File[] | null = []) {
     return !excludePatterns.some(pattern => minimatch(file?.to ?? '', pattern));
   });
 
-  core.debug(`EXCLUDE PATTERNS: ${stringify(excludePatterns)}`);
+  core.notice(`Exclude patterns: ${stringify(excludePatterns)}`);
 
   return filteredDiff;
 }
@@ -25,23 +25,23 @@ export async function parsedDifference(params: PRDetails) {
 
   let diff: string | null = null;
 
-  core.debug(`PR DIFF ACTION: ${action}`);
-
   if (action === 'opened') {
     diff = await getDiff(prDetails.owner, prDetails.repo, prDetails.pullNumber);
   } else if (action === 'synchronize') {
     const response = await compareCommits(params);
     diff = response ? String(response) || null : null;
+  } else {
+    core.warning(`Unsupported PR action: ${action}`);
+    process.exit(0);
   }
 
   const parsedDiff = !!diff ? parseDiff(diff) : null;
   const result = excludeFilter(parsedDiff);
-  // result?.forEach((file: File) => {
-  //   console.log('parsedDiff file chunks:', file);
-  //   file.chunks.forEach((chunk: Chunk) => {
-  //     console.log('parsedDiff chunk changes:', chunk.content, '\n', chunk.changes);
-  //   });
-  // });
+
+  if (!result?.length) {
+    core.warning('No files found to analyze');
+    process.exit(0);
+  }
 
   return result;
 }

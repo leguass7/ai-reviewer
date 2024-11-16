@@ -16,6 +16,10 @@ inputs:
     description: "Glob patterns to exclude files from the diff analysis"
     required: false
     default: ""
+  assistantId:
+    description: "OpenAI Assistant ID"
+    required: false
+    default: ""
 
 # Define your outputs here.
 outputs:

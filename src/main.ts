@@ -4,7 +4,7 @@ import { wait } from './helpers';
 import { parsedDifference } from './lib/diff';
 import { getPRDetails } from './lib/github';
 import { assemblesContentToAnalyze } from './lib/content';
-import { analyzeCode } from './lib/openapi';
+import { analyzeCode } from './lib/openai';
 
 /**
  * The main function for the action.
@@ -13,16 +13,11 @@ import { analyzeCode } from './lib/openapi';
 export async function run(): Promise<void> {
   try {
     const prDetails = await getPRDetails();
-    if (!prDetails) throw new Error('PR details not found');
-
     const parsedDiff = await parsedDifference(prDetails);
-    if (!parsedDiff || !parsedDiff?.length) throw new Error('diff not found');
-
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
-    contents.map(c => console.log('CONTENTS:', c.filename, '\n', c.content));
-
     const comments = await analyzeCode(contents, prDetails);
-    comments.forEach(c => console.log('COMMENTS:', c?.prompt));
+
+    console.log('Comments:', comments);
 
     await wait(parseInt('1000', 10));
 
