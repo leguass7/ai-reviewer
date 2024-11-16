@@ -36691,7 +36691,7 @@ async function analyzeCode(contentList, pRDetails) {
         core.setFailed('No thread found');
         process.exit(1);
     }
-    const additionalInstructions = `Responda no idiôma '${language}'`;
+    const additionalInstructions = (0, prompt_1.getAdditionalInstructions)(language);
     const createTask = (prompt) => {
         const handler = async ({ jobId }) => {
             console.log('jobId', jobId, 'prompt', prompt);
@@ -36723,6 +36723,7 @@ async function analyzeCode(contentList, pRDetails) {
         core.info('No comments found');
         process.exit(0);
     }
+    await openAiService.assistentRemoveThread(thread.id);
     return comments;
 }
 
@@ -36788,7 +36789,7 @@ class OpenAiService {
         this.assistantId = assistantId;
         this.openai = new openai_1.default({ apiKey: this.apiKey });
     }
-    prepareParameters({ additionalInstructions, model = 'gpt-4o-2024-08-06' }) {
+    prepareParameters({ additionalInstructions, model = 'gpt-4-1106-preview' }) {
         return {
             additional_instructions: additionalInstructions,
             assistant_id: this.assistantId,
@@ -36873,6 +36874,7 @@ exports.OpenAiService = OpenAiService;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createFirstThreadMessage = createFirstThreadMessage;
 exports.createPrompt = createPrompt;
+exports.getAdditionalInstructions = getAdditionalInstructions;
 exports.bodyComment = bodyComment;
 function createFirstThreadMessage({ pullNumber, action, description, title, repo }) {
     return {
@@ -36901,6 +36903,9 @@ ${content.content}
 \`\`\`
 
 `;
+}
+function getAdditionalInstructions(language) {
+    return `Não faça comentários positivos ou elogios e responda no idiôma '${language}'`;
 }
 function bodyComment({ reviewComment, reason }) {
     return `
