@@ -36575,7 +36575,6 @@ async function createReviewComment({ owner, repo, pullNumber }, comments) {
         process.exit(0);
     }
     if (response?.data.html_url) {
-        core.setOutput('commentUrl', response?.data.html_url);
         core.notice(`Review comment created: ${response?.data.html_url}`);
     }
     return response;
@@ -36992,8 +36991,8 @@ async function run() {
         const contents = (0, content_1.assemblesContentToAnalyze)(parsedDiff, prDetails);
         const comments = await (0, openai_1.analyzeCode)(contents, prDetails);
         const resComment = await (0, github_1.createReviewComment)(prDetails, comments);
-        console.log('resComment', resComment);
         // Set outputs for other workflow steps to use
+        core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
         core.setOutput('countComments', comments?.length);
         core.setOutput('countFiles', contents?.length);
         const context = github?.context;
