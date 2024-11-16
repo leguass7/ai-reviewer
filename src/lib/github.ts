@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import * as github from '@actions/github';
 import * as core from '@actions/core';
+import { stringify } from 'src/helpers';
 
 export function getGithubToken(): string {
   const token = core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN;
@@ -55,6 +56,8 @@ export type PRDetails = {
 export async function getPRDetails(): Promise<PRDetails> {
   const token = getGithubToken();
   const event = getEventData();
+
+  console.log('EVENT', stringify(event));
 
   core.notice(`PR Event: ${event?.action}`);
 
