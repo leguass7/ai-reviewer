@@ -144,7 +144,6 @@ export async function createReviewComment({ owner, repo, pullNumber }: PRDetails
   }
 
   if (response?.data.html_url) {
-    core.setOutput('commentUrl', response?.data.html_url);
     core.notice(`Review comment created: ${response?.data.html_url}`);
   }
 
