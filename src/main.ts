@@ -25,6 +25,7 @@ export async function run(): Promise<void> {
 
     const context = github?.context;
     const payload = JSON.stringify(context, undefined, 2);
+    process.exit(0);
     // console.log(`CONTEXT PAYLOAD: ${payload}`);
   } catch (error) {
     // Fail the workflow run if an error occurs

@@ -15,3 +15,17 @@ export function fileExists(filePath: string) {
     return false;
   }
 }
+
+export function extractJson<R = Record<string, unknown>>(markdownResponse: string): R | null {
+  const jsonMatch = markdownResponse.match(/```json([\s\S]*?)```/);
+  if (jsonMatch) {
+    try {
+      const jsonData = JSON.parse(jsonMatch?.[1]?.trim?.());
+      return jsonData;
+    } catch (error) {
+      return null;
+    }
+  } else {
+    return null;
+  }
+}

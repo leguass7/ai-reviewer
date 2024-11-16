@@ -6,6 +6,7 @@ import * as core from '@actions/core';
 export function getOpenAiSettings() {
   const openAiApiKey = core.getInput('OPENAI_API_KEY');
   const assistantId = core.getInput('OPENAI_ASSISTANT_ID');
+  const language = core.getInput('LANGUAGE') || 'pt-br';
 
   if (!openAiApiKey) {
     core.setFailed('OpenAI API Key is required');
@@ -17,7 +18,7 @@ export function getOpenAiSettings() {
     process.exit(1);
   }
 
-  return { openAiApiKey, assistantId };
+  return { openAiApiKey, assistantId, language };
 }
 
 export async function getAiResponse(prompt: Content): Promise<AiResponse> {

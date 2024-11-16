@@ -11,7 +11,7 @@ export type QueueTaskResult<T = unknown> = {
   jobId: string;
   success: boolean;
   data?: T;
-} & T;
+};
 
 export type QueueTaskHandler<T = unknown> = (data: QueueData) => Promise<T>;
 

@@ -1,13 +1,25 @@
+import { ThreadCreateParams } from 'openai/resources/beta/threads/threads';
 import { Content } from '../content';
 import type { PRDetails } from '../github';
 
-// Revise o seguinte código diff no arquivo "${content.filename}" e leve em consideração o título e a descrição da solicitação pull ao escrever a resposta.
-// título da PR: ${prDetails.title}
-// Descrição da PR: ${prDetails.description}
+export function createFirstThreadMessage({ pullNumber, action, description, title, repo }: PRDetails): ThreadCreateParams.Message {
+  return {
+    role: 'user',
+    content: `
+Revise a pull request e forneça feedback sobre as alterações propostas. Considere o seguinte contexto:
+Repositório: ${repo}
+Número da PR: ${pullNumber}
+Evento da PR: ${action}
 
-// ---
-// ${prDetails.description}
-// ---
+Título da PR: ${title}
+
+Descrição da PR:
+
+${description}
+
+`
+  };
+}
 
 export function createPrompt(content: Content, prDetails: PRDetails): string {
   return `

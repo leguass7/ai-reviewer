@@ -5,5 +5,6 @@ export type AiComment = {
 };
 
 export type AiResponse = {
+  success?: boolean;
   reviews: AiComment[];
 };
