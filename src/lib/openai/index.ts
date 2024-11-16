@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import { extractJson } from 'src/helpers';
 import { Content } from '../content';
-import { Comment, PRDetails } from '../github';
+import { Comment, createReviewComment, PRDetails } from '../github';
 import { getOpenAiSettings } from './assistant';
 import { AiResponse } from './interfaces';
 import { OpenAiService, RunnerResult, RunnerResultSuccess } from './openai.service';
@@ -39,40 +39,58 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
   const additionalInstructions = getAdditionalInstructions(language);
 
   const createTask = (prompt: Content) => {
-    const handler: QueueTaskHandler<AiResponse> = async ({ jobId }) => {
-      console.log('jobId', jobId, 'prompt', prompt);
+    const handler: QueueTaskHandler = async ({ jobId }) => {
+      core.info(`Processing job ${jobId} ${prompt.filename}`);
       const content = `${prompt?.prompt}`;
       const metadata = { filename: prompt.filename };
+
       const created = await openAiService.assistantThreadCreateMessage(thread.id, content, metadata);
       if (!created) return { reviews: [], success: false };
+
       const response = await openAiService.assistantCreateRunner(thread.id, { additionalInstructions });
-      return { ...safeReturnDto(response), path: prompt.filename };
+
+      const comment = { ...safeReturnDto(response), path: prompt.filename };
+
+      if (!comment?.success || !comment?.reviews?.length) {
+        core.info(`No comments found for ${prompt.filename}`);
+        return { reviews: [], success: false };
+      }
+
+      const batch: Comment[] = comment.reviews.map(review => ({ body: bodyComment(review), path: prompt.filename, line: review.lineNumber }));
+      const resComment = await createReviewComment(pRDetails, batch);
+
+      if (resComment?.data?.html_url) {
+        core.notice(`Comment created for ${prompt.filename}: ${resComment?.data?.html_url}`);
+      }
+
+      return { success: true, data: comment };
     };
     return handler;
   };
 
   const aiComments = await Promise.all(prompts.map(async prompt => addQueue(createTask(prompt))));
+
   if (!aiComments?.length) {
     core.info('No comments found');
     process.exit(0);
   }
 
-  const comments: Comment[] = aiComments
-    ?.filter(({ success, data }) => success && !!data?.success && !!data?.reviews?.length)
-    .reduce((acc, { data }) => {
-      const { reviews, path } = data as AiResponse;
-      reviews.forEach(review => {
-        acc.push({ body: bodyComment(review), path: path || '', line: review.lineNumber });
-      });
-      return acc;
-    }, [] as Comment[]);
+  // const comments: Comment[] = aiComments
+  //   ?.filter(({ success, data }) => success && !!data?.success && !!data?.reviews?.length)
+  //   .reduce((acc, { data }) => {
+  //     const { reviews, path } = data as AiResponse;
+  //     reviews.forEach(review => {
+  //       acc.push({ body: bodyComment(review), path: path || '', line: review.lineNumber });
+  //     });
+  //     return acc;
+  //   }, [] as Comment[]);
 
-  if (!comments?.length) {
-    core.info('No comments found');
-    process.exit(0);
-  }
+  // if (!comments?.length) {
+  //   core.info('No comments found');
+  //   process.exit(0);
+  // }
 
   await openAiService.assistentRemoveThread(thread.id);
 
-  return comments;
+  return [];
 }

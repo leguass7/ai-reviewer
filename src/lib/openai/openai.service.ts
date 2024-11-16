@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import OpenAI, { OpenAIError } from 'openai';
 import type { RequestOptions } from 'openai/core';
 import type { AssistantStream, RunCreateParamsBaseStream } from 'openai/lib/AssistantStream';
 import { ResponseFormatJSONSchema } from 'openai/resources';
@@ -109,7 +109,8 @@ export type RunnerResult = {
 export type ConfigureStreamResolver = (value: RunnerResult) => void;
 export type ConfigureStreamOptions = { threadId: string };
 
-const defaultTimeout = 8 * 60 * 1000;
+// timeout padrão de 3 minutos
+const defaultTimeout = 3 * 60 * 1000;
 export class OpenAiService {
   public openai: OpenAI;
 
@@ -154,8 +155,12 @@ export class OpenAiService {
 
   /** Criar um tópico de conversa na OpenAi */
   public async assistantCreateThread(body?: ThreadCreateParams, options?: RequestOptions<unknown>) {
-    const thread = await this.openai.beta.threads.create(body, options);
-    return thread || null;
+    try {
+      const thread = await this.openai.beta.threads.create(body, options);
+      return thread || null;
+    } catch (error) {
+      return null;
+    }
   }
 
   /** Remover um tópico de conversa na OpenAi  */
@@ -171,9 +176,13 @@ export class OpenAiService {
 
   /** Criar uma mensagem de usuário no tópico de conversa na OpenAi */
   public async assistantThreadCreateMessage(threadId: string, body: string, metadata?: Record<string, string>) {
-    const message: MessageCreateParams = { role: 'user', content: body, metadata };
-    const thread = await this.openai.beta.threads.messages.create(threadId, message);
-    return thread || null;
+    try {
+      const message: MessageCreateParams = { role: 'user', content: body, metadata };
+      const thread = await this.openai.beta.threads.messages.create(threadId, message);
+      return thread || null;
+    } catch {
+      return null;
+    }
   }
 
   async assistantCreateRunner(threadId: string, { timeout = defaultTimeout, ...options }: CreateRunnerOptions) {
@@ -188,8 +197,14 @@ export class OpenAiService {
     const params = this.prepareParameters(options);
 
     const execute = new Promise(async resolve => {
-      const stream = this.openai.beta.threads.runs.stream(threadId, params, { timeout }) as AssistantStream;
-      this.configureStream(stream, resolve, { threadId });
+      try {
+        const stream = this.openai.beta.threads.runs.stream(threadId, params, { timeout }) as AssistantStream;
+        this.configureStream(stream, resolve, { threadId });
+      } catch (error) {
+        let err = null;
+        if (error instanceof OpenAIError) err = error.message;
+        resolve({ success: false, threadId, error: err });
+      }
     });
 
     try {

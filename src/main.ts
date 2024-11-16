@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { wait } from './helpers';
 import { parsedDifference } from './lib/diff';
 import { createReviewComment, getPRDetails } from './lib/github';
 import { assemblesContentToAnalyze } from './lib/content';
@@ -21,6 +20,7 @@ export async function run(): Promise<void> {
 
     // Set outputs for other workflow steps to use
     core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
+    core.setOutput('commentUrl', ``);
     core.setOutput('countComments', comments?.length);
     core.setOutput('countFiles', contents?.length);
 
