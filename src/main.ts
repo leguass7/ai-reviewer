@@ -16,10 +16,10 @@ export async function run(): Promise<void> {
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
 
     const comments = await analyzeCode(contents, prDetails);
-    const resComment = await createReviewComment(prDetails, comments);
+    // const resComment = await createReviewComment(prDetails, comments);
 
     // Set outputs for other workflow steps to use
-    core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
+    // core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
     core.setOutput('commentUrl', ``);
     core.setOutput('countComments', comments?.length);
     core.setOutput('countFiles', contents?.length);

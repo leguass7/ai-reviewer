@@ -8,6 +8,10 @@ import { OpenAiService, RunnerResult, RunnerResultSuccess } from './openai.servi
 import { bodyComment, createFirstThreadMessage, createPrompt, getAdditionalInstructions } from './prompt';
 import { addQueue, QueueTaskHandler } from './queue';
 
+type TaskResult = AiResponse & {
+  htmlUrl?: string;
+};
+
 function safeReturnDto(d: RunnerResult | null): AiResponse {
   if (d?.success) {
     const { content } = d as RunnerResultSuccess;
@@ -39,7 +43,7 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
   const additionalInstructions = getAdditionalInstructions(language);
 
   const createTask = (prompt: Content) => {
-    const handler: QueueTaskHandler = async ({ jobId }) => {
+    const handler: QueueTaskHandler<TaskResult> = async ({ jobId }) => {
       core.info(`Processing job ${jobId} ${prompt.filename}`);
       const content = `${prompt?.prompt}`;
       const metadata = { filename: prompt.filename };
@@ -53,17 +57,18 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
 
       if (!comment?.success || !comment?.reviews?.length) {
         core.info(`No comments found for ${prompt.filename}`);
-        return { reviews: [], success: false };
+        return comment;
       }
 
       const batch: Comment[] = comment.reviews.map(review => ({ body: bodyComment(review), path: prompt.filename, line: review.lineNumber }));
       const resComment = await createReviewComment(pRDetails, batch);
+      const htmlUrl = resComment?.data?.html_url;
 
-      if (resComment?.data?.html_url) {
+      if (htmlUrl) {
         core.notice(`Comment created for ${prompt.filename}: ${resComment?.data?.html_url}`);
       }
 
-      return { success: true, data: comment };
+      return { ...comment, htmlUrl };
     };
     return handler;
   };
@@ -92,5 +97,5 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
 
   await openAiService.assistentRemoveThread(thread.id);
 
-  return [];
+  return aiComments;
 }
