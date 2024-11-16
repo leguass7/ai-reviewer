@@ -117,3 +117,23 @@ export async function compareCommits({ owner, repo, baseSha, headSha }: PRDetail
   // @ts-ignore
   return (response?.data || '') as string;
 }
+
+export type Comment = {
+  body: string;
+  path: string;
+  line: number;
+};
+export async function createReviewComment({ owner, repo, pullNumber }: PRDetails, comments: Comment[]) {
+  const token = getGithubToken();
+  const octokit = github.getOctokit(token);
+
+  const response = await octokit.rest.pulls.createReview({
+    owner,
+    repo,
+    pull_number: pullNumber,
+    comments,
+    event: 'COMMENT'
+  });
+
+  return response;
+}

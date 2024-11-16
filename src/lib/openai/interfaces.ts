@@ -6,5 +6,6 @@ export type AiComment = {
 
 export type AiResponse = {
   success?: boolean;
+  path?: string;
   reviews: AiComment[];
 };

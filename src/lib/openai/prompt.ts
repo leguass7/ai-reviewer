@@ -1,6 +1,7 @@
 import { ThreadCreateParams } from 'openai/resources/beta/threads/threads';
 import { Content } from '../content';
 import type { PRDetails } from '../github';
+import { AiComment } from './interfaces';
 
 export function createFirstThreadMessage({ pullNumber, action, description, title, repo }: PRDetails): ThreadCreateParams.Message {
   return {
@@ -29,5 +30,12 @@ Git diff para revisão:
 ${content.content}
 \`\`\`
 
+`;
+}
+
+export function bodyComment({ reviewComment, reason }: AiComment): string {
+  return `
+${reviewComment || ''}
+${reason || ''}
 `;
 }

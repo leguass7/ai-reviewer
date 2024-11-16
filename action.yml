@@ -21,13 +21,15 @@ inputs:
     required: true
   OPENAI_ASSISTANT_ID:
     description: "OpenAI Assistant ID"
-    required: false
+    required: true
     default: ""
 
 # Define your outputs here.
 outputs:
   countFiles:
     description: 'Quantidade de arquivos analisados'
+  countComments:
+    description: 'Quantidade de comentários feitos'
 
 
 runs:

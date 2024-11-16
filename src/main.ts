@@ -2,7 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { wait } from './helpers';
 import { parsedDifference } from './lib/diff';
-import { getPRDetails } from './lib/github';
+import { createReviewComment, getPRDetails } from './lib/github';
 import { assemblesContentToAnalyze } from './lib/content';
 import { analyzeCode } from './lib/openai';
 
@@ -17,16 +17,17 @@ export async function run(): Promise<void> {
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
 
     const comments = await analyzeCode(contents, prDetails);
-
-    await wait(parseInt('1000', 10));
+    const resComment = await createReviewComment(prDetails, comments);
+    console.log('resComment', resComment);
 
     // Set outputs for other workflow steps to use
+    core.setOutput('countComments', comments?.length);
     core.setOutput('countFiles', contents?.length);
 
     const context = github?.context;
     const payload = JSON.stringify(context, undefined, 2);
-    process.exit(0);
     // console.log(`CONTEXT PAYLOAD: ${payload}`);
+    process.exit(0);
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message);
