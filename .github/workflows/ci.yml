@@ -9,11 +9,8 @@ permissions: write-all
 jobs:
   hello_world_job:
     runs-on: ubuntu-latest
-
     name: AI Action Code Reviewer
     steps:
-      # To use this repository's private action,
-      # you must check out the repository
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -22,7 +19,10 @@ jobs:
         id: aireviewer
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ASSISTANT_ID: ${{ secrets.OPENAI_ASSISTANT_ID }}
           exclude: '**/*.json, **/*.md, **/*.map'
+
       # Use the output from the `hello` step
-      - name: Get the output time
-        run: echo "The time was ${{ steps.aireviewer.outputs.time }}"
+      - name: Get the output
+        run: echo "OUTPUT FILES=${{ steps.aireviewer.outputs.countFiles }}"

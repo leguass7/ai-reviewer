@@ -1,12 +1,14 @@
 import { Content } from '../content';
 import { PRDetails } from '../github';
-import { getAiResponse } from './assistant';
+import { getAiResponse, getOpenAiSettings } from './assistant';
 import { AiResponse } from './interfaces';
 import { createPrompt } from './prompt';
 import { addQueue, QueueTaskHandler } from './queue';
 import * as core from '@actions/core';
 
-export async function analyzeCode(contentList: Content[], pRDetails: PRDetails, assistantId?: string) {
+export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) {
+  const openAiSettings = getOpenAiSettings();
+
   const prompts = contentList.map(item => {
     const prompt = createPrompt(item, pRDetails);
     return { ...item, prompt };

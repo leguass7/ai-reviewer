@@ -16,7 +16,10 @@ inputs:
     description: "Glob patterns to exclude files from the diff analysis"
     required: false
     default: ""
-  assistantId:
+  OPENAI_API_KEY:
+    description: "OpenAI API key for GPT."
+    required: true
+  OPENAI_ASSISTANT_ID:
     description: "OpenAI Assistant ID"
     required: false
     default: ""

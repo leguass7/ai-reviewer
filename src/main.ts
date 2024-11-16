@@ -15,9 +15,8 @@ export async function run(): Promise<void> {
     const prDetails = await getPRDetails();
     const parsedDiff = await parsedDifference(prDetails);
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
-    const comments = await analyzeCode(contents, prDetails);
 
-    console.log('Comments:', comments);
+    const comments = await analyzeCode(contents, prDetails);
 
     await wait(parseInt('1000', 10));
 
