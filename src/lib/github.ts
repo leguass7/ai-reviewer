@@ -138,5 +138,15 @@ export async function createReviewComment({ owner, repo, pullNumber }: PRDetails
     event: 'COMMENT'
   });
 
+  if (!response) {
+    core.info('Failed to create review comment');
+    process.exit(0);
+  }
+
+  if (response?.data.html_url) {
+    core.setOutput('commentUrl', response?.data.html_url);
+    core.notice(`Review comment created: ${response?.data.html_url}`);
+  }
+
   return response;
 }
