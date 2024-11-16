@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import * as github from '@actions/github';
 import * as core from '@actions/core';
+import { stringify } from 'src/helpers';
 
 export function getGithubToken(): string {
   const token = core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN;
@@ -55,6 +56,8 @@ export type PRDetails = {
 export async function getPRDetails(): Promise<PRDetails> {
   const token = getGithubToken();
   const event = getEventData();
+
+  console.log('EVENT', stringify(event));
 
   core.notice(`PR Event: ${event?.action}`);
 
@@ -134,6 +137,15 @@ export async function createReviewComment({ owner, repo, pullNumber }: PRDetails
     comments,
     event: 'COMMENT'
   });
+
+  if (!response) {
+    core.info('Failed to create review comment');
+    process.exit(0);
+  }
+
+  if (response?.data.html_url) {
+    core.notice(`Review comment created: ${response?.data.html_url}`);
+  }
 
   return response;
 }

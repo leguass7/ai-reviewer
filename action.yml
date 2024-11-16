@@ -1,21 +1,15 @@
 name: 'AI Code Reviewer'
-description: 'A GitHub Action to review your code.'
+description: 'Action do GitHub para revisar seu código.'
 author: 'Leandro Sbrissa'
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: 'heart'
   color: 'red'
 
-# Define your inputs here.
 inputs:
   GITHUB_TOKEN:
-    description: "GitHub token to interact with the repository."
+    description: "Token do GitHub para interagir com o repositório."
     required: true
-  exclude:
-    description: "Glob patterns to exclude files from the diff analysis"
-    required: false
-    default: ""
   OPENAI_API_KEY:
     description: "OpenAI API key for GPT."
     required: true
@@ -23,14 +17,22 @@ inputs:
     description: "OpenAI Assistant ID"
     required: true
     default: ""
+  exclude:
+    description: "Glob patterns para excluir arquivos da análise de diff"
+    required: false
+    default: ""
+  language:
+    description: "Idioma dos comentários"
+    required: false
+    default: "pt-br"
 
-# Define your outputs here.
 outputs:
   countFiles:
     description: 'Quantidade de arquivos analisados'
   countComments:
     description: 'Quantidade de comentários feitos'
-
+  commentUrl:
+    description: 'URL do comentário feito'
 
 runs:
   using: 'node20'

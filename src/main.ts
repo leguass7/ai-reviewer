@@ -18,9 +18,9 @@ export async function run(): Promise<void> {
 
     const comments = await analyzeCode(contents, prDetails);
     const resComment = await createReviewComment(prDetails, comments);
-    console.log('resComment', resComment);
 
     // Set outputs for other workflow steps to use
+    core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
     core.setOutput('countComments', comments?.length);
     core.setOutput('countFiles', contents?.length);
 

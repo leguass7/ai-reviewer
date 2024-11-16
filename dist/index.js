@@ -36487,6 +36487,7 @@ exports.createReviewComment = createReviewComment;
 const fs_1 = __nccwpck_require__(9896);
 const github = __importStar(__nccwpck_require__(3228));
 const core = __importStar(__nccwpck_require__(7484));
+const helpers_1 = __nccwpck_require__(253);
 function getGithubToken() {
     const token = core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN;
     if (!token) {
@@ -36507,6 +36508,7 @@ function getEventData() {
 async function getPRDetails() {
     const token = getGithubToken();
     const event = getEventData();
+    console.log('EVENT', (0, helpers_1.stringify)(event));
     core.notice(`PR Event: ${event?.action}`);
     const params = {
         owner: event.repository.owner.login,
@@ -36568,6 +36570,13 @@ async function createReviewComment({ owner, repo, pullNumber }, comments) {
         comments,
         event: 'COMMENT'
     });
+    if (!response) {
+        core.info('Failed to create review comment');
+        process.exit(0);
+    }
+    if (response?.data.html_url) {
+        core.notice(`Review comment created: ${response?.data.html_url}`);
+    }
     return response;
 }
 
@@ -36604,8 +36613,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getOpenAiSettings = getOpenAiSettings;
-exports.getAiResponse = getAiResponse;
-const helpers_1 = __nccwpck_require__(253);
 const core = __importStar(__nccwpck_require__(7484));
 function getOpenAiSettings() {
     const openAiApiKey = core.getInput('OPENAI_API_KEY');
@@ -36620,18 +36627,6 @@ function getOpenAiSettings() {
         process.exit(1);
     }
     return { openAiApiKey, assistantId, language };
-}
-async function getAiResponse(prompt) {
-    await (0, helpers_1.wait)(500);
-    return {
-        reviews: [
-            {
-                reviewComment: 'Evite o uso de `console.log` para debugging em produção',
-                lineNumber: 30020,
-                reason: 'Utilizar `console.log` pode expor informações sensíveis no log de produção e afetar a performance. Considere utilizar uma biblioteca de logging com diferentes níveis de log para ambientes de desenvolvimento e produção.'
-            }
-        ]
-    };
 }
 
 
@@ -36667,12 +36662,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.analyzeCode = analyzeCode;
+const core = __importStar(__nccwpck_require__(7484));
 const helpers_1 = __nccwpck_require__(253);
 const assistant_1 = __nccwpck_require__(2662);
 const openai_service_1 = __nccwpck_require__(619);
 const prompt_1 = __nccwpck_require__(762);
 const queue_1 = __nccwpck_require__(2241);
-const core = __importStar(__nccwpck_require__(7484));
 function safeReturnDto(d) {
     if (d?.success) {
         const { content } = d;
@@ -36996,8 +36991,8 @@ async function run() {
         const contents = (0, content_1.assemblesContentToAnalyze)(parsedDiff, prDetails);
         const comments = await (0, openai_1.analyzeCode)(contents, prDetails);
         const resComment = await (0, github_1.createReviewComment)(prDetails, comments);
-        console.log('resComment', resComment);
         // Set outputs for other workflow steps to use
+        core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
         core.setOutput('countComments', comments?.length);
         core.setOutput('countFiles', contents?.length);
         const context = github?.context;
