@@ -36483,6 +36483,7 @@ exports.getEventData = getEventData;
 exports.getPRDetails = getPRDetails;
 exports.getDiff = getDiff;
 exports.compareCommits = compareCommits;
+exports.createReviewComment = createReviewComment;
 const fs_1 = __nccwpck_require__(9896);
 const github = __importStar(__nccwpck_require__(3228));
 const core = __importStar(__nccwpck_require__(7484));
@@ -36556,6 +36557,18 @@ async function compareCommits({ owner, repo, baseSha, headSha }) {
     });
     // @ts-ignore
     return (response?.data || '');
+}
+async function createReviewComment({ owner, repo, pullNumber }, comments) {
+    const token = getGithubToken();
+    const octokit = github.getOctokit(token);
+    const response = await octokit.rest.pulls.createReview({
+        owner,
+        repo,
+        pull_number: pullNumber,
+        comments,
+        event: 'COMMENT'
+    });
+    return response;
 }
 
 
@@ -36691,35 +36704,30 @@ async function analyzeCode(contentList, pRDetails) {
             const metadata = { filename: prompt.filename };
             const created = await openAiService.assistantThreadCreateMessage(thread.id, content, metadata);
             if (!created)
-                return { reviews: [] };
+                return { reviews: [], success: false };
             const response = await openAiService.assistantCreateRunner(thread.id, { additionalInstructions });
-            console.log('response', response);
-            return safeReturnDto(response);
+            return { ...safeReturnDto(response), path: prompt.filename };
         };
         return handler;
     };
-    const comments = await Promise.all(prompts.map(async (prompt) => (0, queue_1.addQueue)(createTask(prompt))));
+    const aiComments = await Promise.all(prompts.map(async (prompt) => (0, queue_1.addQueue)(createTask(prompt))));
+    if (!aiComments?.length) {
+        core.info('No comments found');
+        process.exit(0);
+    }
+    const comments = aiComments
+        ?.filter(({ success, data }) => success && !!data?.success && !!data?.reviews?.length)
+        .reduce((acc, { data }) => {
+        const { reviews, path } = data;
+        reviews.forEach(review => {
+            acc.push({ body: (0, prompt_1.bodyComment)(review), path: path || '', line: review.lineNumber });
+        });
+        return acc;
+    }, []);
     if (!comments?.length) {
         core.info('No comments found');
         process.exit(0);
     }
-    comments?.forEach(comment => {
-        console.log('comment', (0, helpers_1.stringify)(comment));
-    });
-    // for (const file of parsedDiff) {
-    //   if (file.to === '/dev/null') continue; // Ignore deleted files
-    //   for (const chunk of file.chunks) {
-    //     const prompt = createPrompt(file, chunk, prDetails);
-    //     const aiResponse = await getAIResponse(prompt);
-    //     if (aiResponse) {
-    //       const newComments = createComment(file, chunk, aiResponse);
-    //       if (newComments) {
-    //         comments.push(...newComments);
-    //       }
-    //     }
-    //   }
-    // }
-    // console.log('w', await w);
     return comments;
 }
 
@@ -36870,6 +36878,7 @@ exports.OpenAiService = OpenAiService;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createFirstThreadMessage = createFirstThreadMessage;
 exports.createPrompt = createPrompt;
+exports.bodyComment = bodyComment;
 function createFirstThreadMessage({ pullNumber, action, description, title, repo }) {
     return {
         role: 'user',
@@ -36896,6 +36905,12 @@ Git diff para revisão:
 ${content.content}
 \`\`\`
 
+`;
+}
+function bodyComment({ reviewComment, reason }) {
+    return `
+${reviewComment || ''}
+${reason || ''}
 `;
 }
 
@@ -36966,7 +36981,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
-const helpers_1 = __nccwpck_require__(253);
 const diff_1 = __nccwpck_require__(8456);
 const github_1 = __nccwpck_require__(3848);
 const content_1 = __nccwpck_require__(4618);
@@ -36981,13 +36995,15 @@ async function run() {
         const parsedDiff = await (0, diff_1.parsedDifference)(prDetails);
         const contents = (0, content_1.assemblesContentToAnalyze)(parsedDiff, prDetails);
         const comments = await (0, openai_1.analyzeCode)(contents, prDetails);
-        await (0, helpers_1.wait)(parseInt('1000', 10));
+        const resComment = await (0, github_1.createReviewComment)(prDetails, comments);
+        console.log('resComment', resComment);
         // Set outputs for other workflow steps to use
+        core.setOutput('countComments', comments?.length);
         core.setOutput('countFiles', contents?.length);
         const context = github?.context;
         const payload = JSON.stringify(context, undefined, 2);
-        process.exit(0);
         // console.log(`CONTEXT PAYLOAD: ${payload}`);
+        process.exit(0);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
