@@ -80,21 +80,6 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
     process.exit(0);
   }
 
-  // const comments: Comment[] = aiComments
-  //   ?.filter(({ success, data }) => success && !!data?.success && !!data?.reviews?.length)
-  //   .reduce((acc, { data }) => {
-  //     const { reviews, path } = data as AiResponse;
-  //     reviews.forEach(review => {
-  //       acc.push({ body: bodyComment(review), path: path || '', line: review.lineNumber });
-  //     });
-  //     return acc;
-  //   }, [] as Comment[]);
-
-  // if (!comments?.length) {
-  //   core.info('No comments found');
-  //   process.exit(0);
-  // }
-
   await openAiService.assistentRemoveThread(thread.id);
 
   return aiComments;

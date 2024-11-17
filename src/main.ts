@@ -20,7 +20,8 @@ export async function run(): Promise<void> {
 
     // Set outputs for other workflow steps to use
     // core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
-    core.setOutput('commentUrl', ``);
+    const urls = comments?.map(comment => comment?.data?.htmlUrl);
+    core.setOutput('commentUrl', urls.join(', '));
     core.setOutput('countComments', comments?.length);
     core.setOutput('countFiles', contents?.length);
 
