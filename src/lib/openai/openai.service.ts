@@ -61,13 +61,13 @@ export class OpenAiService {
     stream.on('textDone', async (data, { id, role }) => {
       const runId = stream?.currentRun?.()?.id;
       const result: RunnerResultSuccess = { content: data?.value, messageId: id, role, runId };
-      console.error('configureStream textDone', threadId, result);
+      // console.error('configureStream textDone', threadId, result);
       return resolve({ ...result, success: true });
     });
 
     stream.on('error', async error => {
       const result: RunnerResultError = { error: error?.message, threadId };
-      console.error('configureStream error', threadId, error);
+      // console.error('configureStream error', threadId, error);
       resolve({ ...result, success: false });
     });
   }

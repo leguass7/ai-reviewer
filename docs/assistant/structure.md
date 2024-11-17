@@ -79,3 +79,16 @@ export class UserController {
   }
 }
 ```
+
+---
+
+## Frontend
+
+**_Example:_** desestruturação permitida
+
+```typescript
+export const ComponentExample: React.FC = () => {
+  const [data, requestData, , loading] = useCustomHook();
+  //...
+};
+```
