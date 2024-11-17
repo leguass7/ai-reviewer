@@ -36729,19 +36729,6 @@ async function analyzeCode(contentList, pRDetails) {
         core.info('No comments found');
         process.exit(0);
     }
-    // const comments: Comment[] = aiComments
-    //   ?.filter(({ success, data }) => success && !!data?.success && !!data?.reviews?.length)
-    //   .reduce((acc, { data }) => {
-    //     const { reviews, path } = data as AiResponse;
-    //     reviews.forEach(review => {
-    //       acc.push({ body: bodyComment(review), path: path || '', line: review.lineNumber });
-    //     });
-    //     return acc;
-    //   }, [] as Comment[]);
-    // if (!comments?.length) {
-    //   core.info('No comments found');
-    //   process.exit(0);
-    // }
     await openAiService.assistentRemoveThread(thread.id);
     return aiComments;
 }
@@ -37056,7 +37043,8 @@ async function run() {
         // const resComment = await createReviewComment(prDetails, comments);
         // Set outputs for other workflow steps to use
         // core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
-        core.setOutput('commentUrl', ``);
+        const urls = comments?.map(comment => comment?.data?.htmlUrl);
+        core.setOutput('commentUrl', urls.join(', '));
         core.setOutput('countComments', comments?.length);
         core.setOutput('countFiles', contents?.length);
         const context = github?.context;
