@@ -8,6 +8,7 @@ GitHub Action to review code in a repository using the OpenAI API [OpenAI](https
 - `OPENAI_ASSISTANT_ID`: OpenAI Assistant ID.
 - `exclude`: Glob patterns to exclude files from the diff analysis.
 - `language`: Language of the comments.
+- `model`: Model to use for the review. Default is `gpt-4-turbo`.
 
 ## Outputs
 
