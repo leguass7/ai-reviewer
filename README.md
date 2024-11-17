@@ -4,16 +4,16 @@ GitHub Action to review code in a repository using the OpenAI API [OpenAI](https
 
 ## Inputs
 
-`OPENAI_API_KEY`: OpenAI API key for GPT.
-`OPENAI_ASSISTANT_ID`: OpenAI Assistant ID.
-`exclude`: Glob patterns to exclude files from the diff analysis.
-`language`: Language of the comments.
+- `OPENAI_API_KEY`: OpenAI API key for GPT.
+- `OPENAI_ASSISTANT_ID`: OpenAI Assistant ID.
+- `exclude`: Glob patterns to exclude files from the diff analysis.
+- `language`: Language of the comments.
 
 ## Outputs
 
-`countFiles`: Number of files in the diff.
-`countComments`: Number of comments made.
-`commentUrl`: URL to the comment.
+- `countFiles`: Number of files in the diff.
+- `countComments`: Number of comments made.
+- `commentUrl`: URL to the comment.
 
 ---
 
