@@ -56,9 +56,7 @@ export type PRDetails = {
 export async function getPRDetails(): Promise<PRDetails> {
   const token = getGithubToken();
   const event = getEventData();
-
-  console.log('EVENT', stringify(event));
-
+  // console.log('EVENT', stringify(event));
   core.notice(`PR Event: ${event?.action}`);
 
   const params = {
