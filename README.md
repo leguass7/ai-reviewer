@@ -29,7 +29,7 @@ on:
 permissions: write-all
 
 jobs:
-  hello_world_job:
+  reviewer:
     runs-on: ubuntu-latest
     name: AI Action Code Reviewer
     steps:
