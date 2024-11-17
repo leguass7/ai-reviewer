@@ -1,83 +1,9 @@
 import OpenAI, { OpenAIError } from 'openai';
 import type { RequestOptions } from 'openai/core';
 import type { AssistantStream, RunCreateParamsBaseStream } from 'openai/lib/AssistantStream';
-import { ResponseFormatJSONSchema } from 'openai/resources';
-import { AssistantTool } from 'openai/resources/beta/assistants';
 import { MessageCreateParams } from 'openai/resources/beta/threads/messages';
 import type { ThreadCreateParams } from 'openai/resources/beta/threads/threads';
 import { wait } from 'src/helpers';
-
-const tool: AssistantTool = {
-  type: 'function',
-  function: {
-    name: 'code-reviewer',
-    description: 'Modelo de resposta da Revisão de código',
-    strict: true,
-    parameters: {
-      type: 'object',
-      properties: {
-        reviews: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              reviewComment: {
-                type: 'string',
-                description: 'Comentário da revisão gerado pelo assistente.'
-              },
-              reason: {
-                type: 'string',
-                description: 'Razão para o comentário feito.'
-              },
-              lineNumber: {
-                type: 'integer',
-                description: 'Número da linha no código onde o comentário se aplica.'
-              }
-            },
-            required: ['reviewComment', 'reason', 'lineNumber'],
-            additionalProperties: false
-          }
-        }
-      },
-      required: ['reviews'],
-      additionalProperties: false
-    }
-  }
-};
-// const schema: ResponseFormatJSONSchema.JSONSchema = {
-//   name: 'code-reviewer',
-//   description: 'Modelo de resposta da Revisão de código',
-//   strict: true,
-//   schema: {
-//     type: 'object',
-//     properties: {
-//       reviews: {
-//         type: 'array',
-//         items: {
-//           type: 'object',
-//           properties: {
-//             reviewComment: {
-//               type: 'string',
-//               description: 'Comentário da revisão gerado pelo assistente.'
-//             },
-//             reason: {
-//               type: 'string',
-//               description: 'Razão para o comentário feito.'
-//             },
-//             lineNumber: {
-//               type: 'integer',
-//               description: 'Número da linha no código onde o comentário se aplica.'
-//             }
-//           },
-//           required: ['reviewComment', 'reason', 'lineNumber'],
-//           additionalProperties: false
-//         }
-//       }
-//     },
-//     required: ['reviews'],
-//     additionalProperties: false
-//   }
-// };
 
 type SafeReturn = { success: boolean } & Record<string, any>;
 
@@ -121,18 +47,11 @@ export class OpenAiService {
     this.openai = new OpenAI({ apiKey: this.apiKey });
   }
 
-  private prepareParameters({
-    additionalInstructions,
-    model = 'gpt-4-1106-preview'
-  }: Omit<CreateRunnerOptions, 'timeout'>): RunCreateParamsBaseStream {
+  private prepareParameters({ additionalInstructions, model = 'gpt-4-turbo' }: Omit<CreateRunnerOptions, 'timeout'>): RunCreateParamsBaseStream {
     return {
       additional_instructions: additionalInstructions,
       assistant_id: this.assistantId,
-      // model,
-      // response_format: { type: 'json_object' },
-      temperature: 0.5
-      // tools: [tool]
-      // temperature: 0.5
+      model
     };
   }
 

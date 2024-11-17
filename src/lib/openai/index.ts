@@ -3,17 +3,13 @@ import { extractJson } from 'src/helpers';
 import { Content } from '../content';
 import { Comment, createReviewComment, PRDetails } from '../github';
 import { getOpenAiSettings } from './assistant';
-import { AiResponse } from './interfaces';
+import { AiResponse, TaskResult } from './interfaces';
 import { OpenAiService, RunnerResult, RunnerResultSuccess } from './openai.service';
 import { bodyComment, createFirstThreadMessage, createPrompt, getAdditionalInstructions } from './prompt';
 import { addQueue, QueueTaskHandler } from './queue';
 
-type TaskResult = AiResponse & {
-  htmlUrl?: string;
-};
-
 function safeReturnDto(d: RunnerResult | null): AiResponse {
-  if (d?.success) {
+  if (!!d?.success) {
     const { content } = d as RunnerResultSuccess;
     const reviews = extractJson<AiResponse>(content);
     return { success: !!reviews, ...((reviews || {}) as AiResponse) };
@@ -27,7 +23,7 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
     return { ...item, prompt };
   });
 
-  const { assistantId, openAiApiKey, language } = getOpenAiSettings();
+  const { assistantId, openAiApiKey, language, model } = getOpenAiSettings();
   const openAiService = new OpenAiService(openAiApiKey, assistantId);
 
   const thread = await openAiService.assistantCreateThread({
@@ -51,8 +47,7 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
       const created = await openAiService.assistantThreadCreateMessage(thread.id, content, metadata);
       if (!created) return { reviews: [], success: false };
 
-      const response = await openAiService.assistantCreateRunner(thread.id, { additionalInstructions });
-
+      const response = await openAiService.assistantCreateRunner(thread.id, { additionalInstructions, model });
       const comment = { ...safeReturnDto(response), path: prompt.filename };
 
       if (!comment?.success || !comment?.reviews?.length) {
@@ -62,12 +57,7 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
 
       const batch: Comment[] = comment.reviews.map(review => ({ body: bodyComment(review), path: prompt.filename, line: review.lineNumber }));
       const resComment = await createReviewComment(pRDetails, batch);
-
       const htmlUrl = resComment?.data?.html_url;
-
-      if (htmlUrl) {
-        core.notice(`Comment created for ${prompt.filename}: ${resComment?.data?.html_url}`);
-      }
 
       return { ...comment, htmlUrl };
     };

@@ -17,6 +17,10 @@ inputs:
     description: "OpenAI Assistant ID"
     required: true
     default: ""
+  model:
+    description: "Modelo de linguagem para análise de código"
+    required: false
+    default: "gpt-4-turbo"
   exclude:
     description: "Glob patterns para excluir arquivos da análise de diff"
     required: false

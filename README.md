@@ -44,6 +44,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ASSISTANT_ID: ${{ secrets.OPENAI_ASSISTANT_ID }}
           exclude: '**/*.json, **/*.md, **/*.map, **/*.lock.json, dist/**/*.js'
+          model: 'gpt-4-turbo'
 
       # Use the output step
       - name: Get the output

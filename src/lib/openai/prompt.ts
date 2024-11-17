@@ -26,6 +26,8 @@ export function createPrompt(content: Content, prDetails: PRDetails): string {
   return `
 Git diff para revisão:
 
+filename: \`${content.filename}\`
+
 \`\`\`diff
 ${content.content}
 \`\`\`
@@ -34,7 +36,9 @@ ${content.content}
 }
 
 export function getAdditionalInstructions(language: string): string {
-  return `Não faça comentários positivos ou elogios e responda no idiôma '${language}'`;
+  return `IMPORTANTE:
+- Não faça comentários positivos ou elogios;
+- Responda no idiôma '${language}'.`;
 }
 
 export function bodyComment({ reviewComment, reason }: AiComment): string {

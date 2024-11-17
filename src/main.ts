@@ -1,8 +1,7 @@
 import * as core from '@actions/core';
-import * as github from '@actions/github';
-import { parsedDifference } from './lib/diff';
-import { createReviewComment, getPRDetails } from './lib/github';
 import { assemblesContentToAnalyze } from './lib/content';
+import { parsedDifference } from './lib/diff';
+import { getPRDetails } from './lib/github';
 import { analyzeCode } from './lib/openai';
 
 /**
@@ -16,21 +15,17 @@ export async function run(): Promise<void> {
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
 
     const comments = await analyzeCode(contents, prDetails);
-    // const resComment = await createReviewComment(prDetails, comments);
+    const urls = comments?.map(comment => comment?.data?.htmlUrl).filter(Boolean);
 
     // Set outputs for other workflow steps to use
-    // core.setOutput('commentUrl', `${resComment?.data?.html_url}`);
-    const urls = comments?.map(comment => comment?.data?.htmlUrl);
     core.setOutput('commentUrl', urls.join(', '));
     core.setOutput('countComments', comments?.length);
     core.setOutput('countFiles', contents?.length);
 
-    const context = github?.context;
-    const payload = JSON.stringify(context, undefined, 2);
-    // console.log(`CONTEXT PAYLOAD: ${payload}`);
     process.exit(0);
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message);
+    process.exit(1);
   }
 }

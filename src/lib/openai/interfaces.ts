@@ -9,3 +9,7 @@ export type AiResponse = {
   path?: string;
   reviews: AiComment[];
 };
+
+export type TaskResult = AiResponse & {
+  htmlUrl?: string;
+};
