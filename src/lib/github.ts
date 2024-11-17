@@ -129,6 +129,7 @@ export type Comment = {
 export async function createReviewComment({ owner, repo, pullNumber }: PRDetails, comments: Comment[]) {
   const token = getGithubToken();
   const octokit = github.getOctokit(token);
+  const filename = comments?.[0]?.path;
 
   try {
     const response = await octokit.rest.pulls.createReview({
@@ -148,9 +149,8 @@ export async function createReviewComment({ owner, repo, pullNumber }: PRDetails
       core.notice(`Review comment created: ${response?.data.html_url}`);
     }
     return response;
-  } catch (error) {
-    // @ts-ignore
-    core.setFailed(`Failed to create review comment: ${error?.message}`);
+  } catch (error: any) {
+    core.setFailed(`Failed to create review comment (${filename}): ${error?.message}`);
     return null;
   }
 }

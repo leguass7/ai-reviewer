@@ -36563,6 +36563,7 @@ async function compareCommits({ owner, repo, baseSha, headSha }) {
 async function createReviewComment({ owner, repo, pullNumber }, comments) {
     const token = getGithubToken();
     const octokit = github.getOctokit(token);
+    const filename = comments?.[0]?.path;
     try {
         const response = await octokit.rest.pulls.createReview({
             owner,
@@ -36581,8 +36582,7 @@ async function createReviewComment({ owner, repo, pullNumber }, comments) {
         return response;
     }
     catch (error) {
-        // @ts-ignore
-        core.setFailed(`Failed to create review comment: ${error?.message}`);
+        core.setFailed(`Failed to create review comment (${filename}): ${error?.message}`);
         return null;
     }
 }

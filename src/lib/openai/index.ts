@@ -62,6 +62,7 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
 
       const batch: Comment[] = comment.reviews.map(review => ({ body: bodyComment(review), path: prompt.filename, line: review.lineNumber }));
       const resComment = await createReviewComment(pRDetails, batch);
+
       const htmlUrl = resComment?.data?.html_url;
 
       if (htmlUrl) {
