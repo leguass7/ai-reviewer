@@ -36487,6 +36487,7 @@ exports.createReviewComment = createReviewComment;
 const fs_1 = __nccwpck_require__(9896);
 const github = __importStar(__nccwpck_require__(3228));
 const core = __importStar(__nccwpck_require__(7484));
+const helpers_1 = __nccwpck_require__(253);
 function getGithubToken() {
     const token = core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN;
     if (!token) {
@@ -36498,6 +36499,7 @@ function getGithubToken() {
 function getEventData() {
     const eventPath = process.env.GITHUB_EVENT_PATH ?? '';
     const eventData = JSON.parse((0, fs_1.readFileSync)(eventPath ?? '', 'utf8'));
+    console.log('\neventData\n', (0, helpers_1.stringify)(eventData));
     if (!eventData) {
         core.setFailed(`Event data not found: ${eventPath}`);
         process.exit(1);
