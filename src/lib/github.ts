@@ -35,7 +35,7 @@ type PREventData = {
 export function getEventData(): PREventData {
   const eventPath = process.env.GITHUB_EVENT_PATH ?? '';
   const eventData = JSON.parse(readFileSync(eventPath ?? '', 'utf8'));
-  console.log('eventData', stringify(eventData));
+  console.log('\neventData\n', stringify(eventData));
   if (!eventData) {
     core.setFailed(`Event data not found: ${eventPath}`);
     process.exit(1);
