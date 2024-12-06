@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs';
 import * as github from '@actions/github';
 import * as core from '@actions/core';
-import { stringify } from 'src/helpers';
 
 export function getGithubToken(): string {
   const token = core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN;
@@ -35,7 +34,7 @@ type PREventData = {
 export function getEventData(): PREventData {
   const eventPath = process.env.GITHUB_EVENT_PATH ?? '';
   const eventData = JSON.parse(readFileSync(eventPath ?? '', 'utf8'));
-  console.log('\neventData\n', stringify(eventData));
+  // console.log('\neventData\n', stringify(eventData));
   if (!eventData) {
     core.setFailed(`Event data not found: ${eventPath}`);
     process.exit(1);
@@ -90,8 +89,8 @@ export async function getPRDetails(): Promise<PRDetails> {
 
 export async function getDiff(owner: string, repo: string, pullNumber: number): Promise<string | null> {
   const token = getGithubToken();
-
   const octokit = github.getOctokit(token);
+
   const response = await octokit.rest.pulls.get({
     owner,
     repo,

@@ -14,6 +14,9 @@ export async function run(): Promise<void> {
     const parsedDiff = await parsedDifference(prDetails);
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
 
+    console.log('coments', contents);
+    process.exit(0);
+
     const comments = await analyzeCode(contents, prDetails);
     const urls = comments?.map(comment => comment?.data?.htmlUrl).filter(Boolean);
 
