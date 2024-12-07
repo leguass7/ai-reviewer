@@ -35,22 +35,28 @@ export type RunnerResult = {
 export type ConfigureStreamResolver = (value: RunnerResult) => void;
 export type ConfigureStreamOptions = { threadId: string };
 
+export type OpenAiOptions = {
+  apiKey: string;
+  assistantId: string;
+  language?: string;
+  model?: string;
+};
+
 // timeout padrão de 3 minutos
 const defaultTimeout = 3 * 60 * 1000;
 export class OpenAiService {
   public openai: OpenAI;
 
-  constructor(
-    private readonly apiKey: string,
-    private readonly assistantId: string
-  ) {
-    this.openai = new OpenAI({ apiKey: this.apiKey });
+  constructor(private readonly options: OpenAiOptions) {
+    if (!options.apiKey) throw new Error('OpenAI API Key is required');
+    if (!options.assistantId) throw new Error('Assistant ID is required');
+    this.openai = new OpenAI({ apiKey: options.apiKey });
   }
 
   private prepareParameters({ additionalInstructions, model = 'gpt-4-turbo' }: Omit<CreateRunnerOptions, 'timeout'>): RunCreateParamsBaseStream {
     return {
       additional_instructions: additionalInstructions,
-      assistant_id: this.assistantId,
+      assistant_id: this.options.assistantId,
       model
     };
   }

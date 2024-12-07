@@ -23,8 +23,8 @@ export async function analyzeCode(contentList: Content[], pRDetails: PRDetails) 
     return { ...item, prompt };
   });
 
-  const { assistantId, openAiApiKey, language, model } = getOpenAiSettings();
-  const openAiService = new OpenAiService(openAiApiKey, assistantId);
+  const { assistantId, apiKey, language, model } = getOpenAiSettings();
+  const openAiService = new OpenAiService({ assistantId, apiKey, language, model });
 
   const thread = await openAiService.assistantCreateThread({
     messages: [createFirstThreadMessage(pRDetails)],
