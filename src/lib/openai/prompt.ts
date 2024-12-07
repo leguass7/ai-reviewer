@@ -35,7 +35,7 @@ ${content.content}
 `;
 }
 
-export function getAdditionalInstructions(language: string): string {
+export function getAdditionalInstructions(language: string = 'pt-br'): string {
   return `IMPORTANTE:
 - Não faça comentários positivos ou elogios;
 - Responda no idiôma '${language}'.`;

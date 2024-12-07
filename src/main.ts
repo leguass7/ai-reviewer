@@ -3,6 +3,7 @@ import { assemblesContentToAnalyze } from './lib/content';
 import { parsedDifference } from './lib/diff';
 import { getPRDetails } from './lib/github';
 import { analyzeCode } from './lib/openai';
+import { createTopicManager } from './lib/topic-manager';
 
 /**
  * The main function for the action.
@@ -13,6 +14,11 @@ export async function run(): Promise<void> {
     const prDetails = await getPRDetails();
     const parsedDiff = await parsedDifference(prDetails);
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
+
+    const topicManager = await createTopicManager();
+
+    // console.log('coments', contents);
+    process.exit(0);
 
     const comments = await analyzeCode(contents, prDetails);
     const urls = comments?.map(comment => comment?.data?.htmlUrl).filter(Boolean);
