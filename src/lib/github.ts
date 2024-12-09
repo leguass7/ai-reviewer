@@ -131,6 +131,25 @@ export async function createReviewComment({ owner, repo, pullNumber }: PRDetails
 
   const message = `filename: ${filename}, comments: ${comments?.length}`;
 
+  // remover todos os comentários de commit da PR
+  const { data: existingComments } = await octokit.rest.pulls.listReviewComments({
+    owner,
+    repo,
+    pull_number: pullNumber
+  });
+
+  if (existingComments?.length) {
+    await Promise.all(
+      existingComments.map(async comment => {
+        await octokit.rest.pulls.deleteReviewComment({
+          owner,
+          repo,
+          comment_id: comment.id
+        });
+      })
+    );
+  }
+
   try {
     const response = await octokit.rest.pulls.createReview({
       owner,
