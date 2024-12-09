@@ -30,7 +30,6 @@ export async function run(): Promise<void> {
     // process.exit(0);
 
     const aiComments = await topicManager.codeAnalyzer.analyze(validTopics);
-
     const commentList = aiComments.reduce((acc, item) => {
       if (item?.success && item?.reviews?.length) {
         if (!!item?.path) {
