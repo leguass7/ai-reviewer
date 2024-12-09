@@ -5,7 +5,7 @@ export interface Topic {
   id: string;
   projectId: string;
   file: string;
-  messages: TopicMessage[];
+  messages?: TopicMessage[];
 }
 
 export const TopicEntity = new EntitySchema<Topic>({
@@ -29,8 +29,10 @@ export const TopicEntity = new EntitySchema<Topic>({
   relations: {
     messages: {
       target: 'topic-message',
-      type: 'one-to-many'
-      // inverseSide: 'topic'
+      type: 'one-to-many',
+      eager: true,
+      cascade: true,
+      inverseSide: 'topic'
     }
   }
 });

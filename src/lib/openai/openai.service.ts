@@ -13,7 +13,7 @@ export type CreateRunnerOptions = {
   streamParams?: Partial<RunCreateParamsBaseStream>;
   execTimeout?: number;
   temperature?: number;
-  model?: RunCreateParamsBaseStream['model'];
+  // model?: RunCreateParamsBaseStream['model'];
 };
 
 type RunnerResultError = {
@@ -38,7 +38,7 @@ export type ConfigureStreamOptions = { threadId: string };
 export type OpenAiOptions = {
   apiKey: string;
   assistantId: string;
-  language?: string;
+  language: string;
   model?: string;
 };
 
@@ -53,11 +53,11 @@ export class OpenAiService {
     this.openai = new OpenAI({ apiKey: options.apiKey });
   }
 
-  private prepareParameters({ additionalInstructions, model = 'gpt-4-turbo' }: Omit<CreateRunnerOptions, 'timeout'>): RunCreateParamsBaseStream {
+  private prepareParameters({ additionalInstructions }: Omit<CreateRunnerOptions, 'timeout'>): RunCreateParamsBaseStream {
     return {
       additional_instructions: additionalInstructions,
       assistant_id: this.options.assistantId,
-      model
+      model: this?.options?.model || 'gpt-4-turbo'
     };
   }
 
@@ -78,10 +78,25 @@ export class OpenAiService {
     });
   }
 
+  public getOptions() {
+    return this.options;
+  }
+
   /** Criar um tópico de conversa na OpenAi */
   public async assistantCreateThread(body?: ThreadCreateParams, options?: RequestOptions<unknown>) {
+    this.openai.beta.threads.retrieve;
     try {
       const thread = await this.openai.beta.threads.create(body, options);
+      return thread || null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /** Recuperar um tópico de conversa na OpenAi */
+  public async assistantRetrieveThread(threadId: string) {
+    try {
+      const thread = await this.openai.beta.threads.retrieve(threadId);
       return thread || null;
     } catch (error) {
       return null;
@@ -100,7 +115,7 @@ export class OpenAiService {
   }
 
   /** Criar uma mensagem de usuário no tópico de conversa na OpenAi */
-  public async assistantThreadCreateMessage(threadId: string, body: string, metadata?: Record<string, string>) {
+  public async assistantThreadCreateMessage(threadId: string, body: string, metadata?: Record<string, unknown>) {
     try {
       const message: MessageCreateParams = { role: 'user', content: body, metadata };
       const thread = await this.openai.beta.threads.messages.create(threadId, message);

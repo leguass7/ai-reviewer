@@ -1,9 +1,10 @@
 import * as core from '@actions/core';
 import { assemblesContentToAnalyze } from './lib/content';
 import { parsedDifference } from './lib/diff';
-import { getPRDetails } from './lib/github';
-import { analyzeCode } from './lib/openai';
+import { Comment, createReviewComment, getPRDetails } from './lib/github';
 import { createTopicManager } from './lib/topic-manager';
+import { ValidTopic } from './lib/topic-manager/topic-manager.interface';
+import { bodyComment } from './lib/openai/prompt';
 
 /**
  * The main function for the action.
@@ -15,17 +16,37 @@ export async function run(): Promise<void> {
     const parsedDiff = await parsedDifference(prDetails);
     const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
 
-    const topicManager = await createTopicManager();
+    const topicManager = await createTopicManager(prDetails);
+    const topicResults = await Promise.all(contents.map(content => topicManager.syncTopic(content)));
+    console.log('topicResults', topicResults?.length);
 
-    // console.log('coments', contents);
-    process.exit(0);
+    topicResults.forEach(comment => {
+      console.log('topicResults', comment.topicId, comment.success, comment.isDeleted);
+    });
 
-    const comments = await analyzeCode(contents, prDetails);
-    const urls = comments?.map(comment => comment?.data?.htmlUrl).filter(Boolean);
+    const validTopics = topicResults.filter(({ isDeleted, success, topicId }) => !isDeleted && success && topicId) as ValidTopic[];
+
+    console.log('validTopics', validTopics?.length);
+    // process.exit(0);
+
+    const aiComments = await topicManager.codeAnalyzer.analyze(validTopics);
+    const commentList = aiComments.reduce((acc, item) => {
+      if (item?.success && item?.reviews?.length) {
+        if (!!item?.path) {
+          item?.reviews.forEach(review => {
+            acc.push({ body: bodyComment(review), path: item.path as string, line: review.lineNumber });
+          });
+        }
+      }
+
+      return acc;
+    }, [] as Comment[]);
+
+    const comments = await createReviewComment(prDetails, commentList);
 
     // Set outputs for other workflow steps to use
-    core.setOutput('commentUrl', urls.join(', '));
-    core.setOutput('countComments', comments?.length);
+    core.setOutput('commentUrl', comments?.url);
+    core.setOutput('countComments', commentList?.length);
     core.setOutput('countFiles', contents?.length);
 
     process.exit(0);

@@ -6,8 +6,9 @@ export interface TopicMessage {
   topicId: string;
   role: 'assistant' | 'user';
   content: string;
+  metadata?: Record<string, unknown>;
   //
-  topic: Topic[];
+  topic?: Topic;
 }
 
 export const TopicMessageEntity = new EntitySchema<TopicMessage>({
@@ -31,18 +32,24 @@ export const TopicMessageEntity = new EntitySchema<TopicMessage>({
     content: {
       type: 'longtext',
       nullable: true
+    },
+    metadata: {
+      type: 'json',
+      nullable: true
     }
   },
   relations: {
     topic: {
       target: 'topic',
       type: 'many-to-one',
-      // inverseSide: 'topic-message',
+      inverseSide: 'topic',
       joinColumn: {
         referencedColumnName: 'id',
         name: 'topicId',
         foreignKeyConstraintName: 'topic_message_topic_id_fk'
-      }
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
     }
   }
 });

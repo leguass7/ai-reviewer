@@ -49,9 +49,9 @@ export async function parsedDifference(params: PRDetails) {
     pull_number: prDetails.pullNumber
   });
 
-  localExcludeFilter(fileList).forEach(file => {
-    console.log('\n\nfile\n', file?.filename, '\n', file?.patch);
-  });
+  // localExcludeFilter(fileList).forEach(file => {
+  //   console.log('\n\nfile\n', file?.filename, '\n', file?.patch);
+  // });
 
   if (action === 'opened') {
     diff = await getDiff(prDetails.owner, prDetails.repo, prDetails.pullNumber);
@@ -71,9 +71,9 @@ export async function parsedDifference(params: PRDetails) {
     process.exit(0);
   }
 
-  parsedDiff?.forEach(file => {
-    console.log('\n\nfile\n', file);
-  });
+  // parsedDiff?.forEach(file => {
+  //   console.log('\n\nfile\n', file);
+  // });
 
   return result;
 }

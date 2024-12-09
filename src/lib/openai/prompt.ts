@@ -22,7 +22,7 @@ ${description}
   };
 }
 
-export function createPrompt(content: Content, prDetails: PRDetails): string {
+export function createPrompt(content: Content): string {
   return `
 Git diff para revisão:
 
