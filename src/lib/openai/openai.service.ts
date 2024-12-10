@@ -120,8 +120,6 @@ export class OpenAiService {
       const thread = await this.openai.beta.threads.messages.create(threadId, message);
       return thread || null;
     } catch (error: Error | unknown) {
-      console.error('assistantThreadCreateMessage', error);
-      console.error(JSON.stringify(body, null, 2));
       return null;
     }
   }

@@ -65,28 +65,33 @@ export class TopicManager {
   }
 
   async createTopicFile(file: string) {
-    const thread = await this.openAiService.assistantCreateThread({ metadata: this.topicMetadata });
-    if (!thread?.id) {
-      this.failExit('Create thread failed');
-      return null;
+    try {
+      const thread = await this.openAiService.assistantCreateThread({ metadata: this.topicMetadata });
+      if (!thread?.id) {
+        this.failExit('Create thread failed');
+        return null;
+      }
+
+      const firstMessage = createFirstThreadMessage(this.prDetails);
+      const message = await this.openAiService.assistantThreadCreateMessage(thread.id, firstMessage.content as string);
+      if (!message) {
+        this.failExit('Create message failed');
+        return null;
+      }
+
+      const topicMessage: TopicMessage = {
+        id: message.id,
+        role: message.role,
+        topicId: thread.id,
+        content: firstMessage.content as string
+      };
+
+      const topic = await this.topicService.create({ id: thread.id, file, projectId: this.projectId, messages: [topicMessage] });
+      return topic;
+    } catch (error: Error | any) {
+      core.setFailed(`Create topic failed: ${error?.message}`);
+      process.exit(1);
     }
-
-    const firstMessage = createFirstThreadMessage(this.prDetails);
-    const message = await this.openAiService.assistantThreadCreateMessage(thread.id, firstMessage.content as string);
-    if (!message) {
-      this.failExit('Create message failed');
-      return null;
-    }
-
-    const topicMessage: TopicMessage = {
-      id: message.id,
-      role: message.role,
-      topicId: thread.id,
-      content: firstMessage.content as string
-    };
-
-    const topic = await this.topicService.create({ id: thread.id, file, projectId: this.projectId, messages: [topicMessage] });
-    return topic;
   }
 
   private async migrateTopicToNewThread(topic: Topic) {
