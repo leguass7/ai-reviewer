@@ -24,13 +24,13 @@ export class TopicManager {
     public readonly openAiService: OpenAiService
   ) {
     this.prDetails = this.githubService.details as PullRequestDetails;
-    this.projectId = `${this.prDetails.owner}/${this.prDetails.repo}`;
+    this.projectId = `${this.prDetails.owner}/${this.prDetails.repo}#${this.prDetails.pullNumber}`;
     this.topicMetadata = { repo: this.prDetails.repo, pullNumber: `${this.prDetails.pullNumber}` };
   }
 
   async init() {
     this.prDetails = await this.githubService.getPullRequestDetails();
-    this.projectId = `${this?.prDetails?.owner}/${this?.prDetails?.repo}`;
+    this.projectId = `${this.prDetails.owner}/${this.prDetails.repo}#${this.prDetails.pullNumber}`;
     this.topicMetadata = { repo: this.prDetails.repo, pullNumber: `${this.prDetails.pullNumber}` };
     core.info(`TopicManager projectId: ${this.projectId} ${stringify(this.topicMetadata)}`);
     return this;
