@@ -84,7 +84,6 @@ export class OpenAiService {
 
   /** Criar um tópico de conversa na OpenAi */
   public async assistantCreateThread(body?: ThreadCreateParams, options?: RequestOptions<unknown>) {
-    this.openai.beta.threads.retrieve;
     try {
       const thread = await this.openai.beta.threads.create(body, options);
       return thread || null;

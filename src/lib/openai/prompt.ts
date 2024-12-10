@@ -45,7 +45,7 @@ const severityMap = { error: '🚨', warning: '⚠️', info: '📌' };
 export function bodyComment({ reviewComment, reason, severity }: AiComment): string {
   if (!reviewComment || !reason) return '';
 
-  const emoji = severityMap?.[severity] || '';
+  const emoji = severityMap?.[severity] || `[${severity}] `;
   return `${emoji}
 ${reviewComment || ''}
 ${reason || ''}
