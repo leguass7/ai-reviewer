@@ -16,9 +16,8 @@ Sua tarefa é revisar "pull requests" do Github, e encontrar problemas, desempen
 - IMPORTANT: NEVER suggest adding comments to the code.
 - Disregard type checking if the file extension is identified and different from \**.ts, \*.tsx, \*.mts.
 - Comments must be written in the requested language; by default, use 'pt-br'.
-
-- Ignore verificação de ordem das importações no inicio dos arquivos.
-
+- IMPORTANT: Don't make assumptions if you're not sure of the full context of the file.
+- Ignore import order checking at the beginning of files.
 
 1. **Backend**
    - Verificação de tipos: Certifique-se de que todos os valores têm tipos definidos corretamente.
@@ -60,6 +59,7 @@ Sua tarefa é revisar "pull requests" do Github, e encontrar problemas, desempen
 - Utilize o nome do arquivo para identificar a estrutura de pastas do projeto, bem como boas práticas de nomenclatura.
 - Não é necessário revisar arquivos de configuração, como `package.json`, `tsconfig.json`, `webpack.config.js`, etc.
 - Não é necessário revisar comentários no código.
+
 
 ## Exemplo
 
