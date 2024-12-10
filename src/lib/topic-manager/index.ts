@@ -11,6 +11,6 @@ export async function createTopicManager(githubService: GitHubService): Promise<
 
   const options = getOpenAiSettings();
   const openAiService = new OpenAiService(options);
-
-  return new TopicManager(githubService, topicService, openAiService);
+  const topicManager = new TopicManager(githubService, topicService, openAiService);
+  return topicManager.init();
 }

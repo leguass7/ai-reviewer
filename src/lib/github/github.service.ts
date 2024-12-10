@@ -26,12 +26,14 @@ export class GitHubService {
 
   getEventData(): PREventData {
     const eventPath = process.env.GITHUB_EVENT_PATH ?? '';
-    const eventData = JSON.parse(readFileSync(eventPath ?? '', 'utf8'));
+    const eventData = JSON.parse(readFileSync(eventPath ?? '', 'utf8')) as PREventData;
     if (!eventData) {
       core.setFailed(`Event data not found: ${eventPath}`);
       process.exit(1);
     }
-    return eventData as PREventData;
+
+    core.info(`Loaded event data: ${eventPath}`);
+    return eventData;
   }
 
   private excludeFilter(files: File[] | null = []) {
@@ -104,6 +106,7 @@ export class GitHubService {
         baseSha: before || response?.data?.base?.sha,
         headSha: after || response?.data?.head?.sha
       };
+      core.notice(`PR Details: ${this.details.repo}/${this.details.pullNumber}${this.details.pullNumber}`);
       return this.details;
     } catch (error: Error | any) {
       core.setFailed(`Error getting PR details: ${error?.message}`);

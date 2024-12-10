@@ -1,11 +1,7 @@
 import * as core from '@actions/core';
 import { assemblesContentToAnalyze } from './lib/content';
-import { createTopicManager } from './lib/topic-manager';
-import { ValidTopic } from './lib/topic-manager/topic-manager.interface';
-import { bodyComment } from './lib/openai/prompt';
-import { GitHubService } from './lib/github/github.service';
 import { createGithubService } from './lib/github';
-import { Comment, createReviewComment } from './lib/github_old';
+import { createTopicManager } from './lib/topic-manager';
 
 /**
  * The main function for the action.
@@ -13,7 +9,7 @@ import { Comment, createReviewComment } from './lib/github_old';
  */
 export async function run(): Promise<void> {
   try {
-    const githubService = createGithubService();
+    const githubService = await createGithubService();
     const pullRequestDetails = await githubService.getPullRequestDetails();
     const parsedDiff = await githubService.parsedDifference();
 

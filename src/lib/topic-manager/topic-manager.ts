@@ -10,6 +10,7 @@ import type { PullRequestDetails, TopicContent, TopicMessageCreate } from './top
 import { CodeAnalyzer } from './code-analyzer';
 import type { Comment, GitHubService } from '../github';
 import type { AiComment, TaskResult } from '../openai/interfaces';
+import { stringify } from 'src/helpers';
 
 export class TopicManager {
   private projectId = 'default';
@@ -25,6 +26,14 @@ export class TopicManager {
     this.prDetails = this.githubService.details as PullRequestDetails;
     this.projectId = `${this.prDetails.owner}/${this.prDetails.repo}`;
     this.topicMetadata = { repo: this.prDetails.repo, pullNumber: `${this.prDetails.pullNumber}` };
+  }
+
+  async init() {
+    this.prDetails = await this.githubService.getPullRequestDetails();
+    this.projectId = `${this?.prDetails?.owner}/${this?.prDetails?.repo}`;
+    this.topicMetadata = { repo: this.prDetails.repo, pullNumber: `${this.prDetails.pullNumber}` };
+    core.info(`TopicManager projectId: ${this.projectId} ${stringify(this.topicMetadata)}`);
+    return this;
   }
 
   get codeAnalyzer() {
@@ -47,6 +56,7 @@ export class TopicManager {
       }
       // Marca o tópico como deletado mas mantém histórico
       const deleted = await this.topicService.remove(topic.id);
+      if (!!deleted?.affected) core.info(`Tópico removido: ${topic?.id} ${topic?.file}`);
       return !!deleted?.affected;
     } catch (error: Error | any) {
       core.warning(`Erro ao remover: ${error?.message}`);

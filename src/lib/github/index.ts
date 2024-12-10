@@ -4,5 +4,6 @@ export * from './github.interface';
 export type { GitHubService };
 
 export function createGithubService() {
-  return new GitHubService();
+  const githubService = new GitHubService();
+  return githubService.init();
 }
