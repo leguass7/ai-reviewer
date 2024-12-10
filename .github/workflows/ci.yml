@@ -26,4 +26,4 @@ jobs:
 
       # Use the output from the `hello` step
       - name: Get the output
-        run: echo "OUTPUT FILES=${{ steps.aireviewer.outputs.countFiles }}"
+        run: echo "OUTPUT -> FILES=${{ steps.aireviewer.outputs.countFiles }}, COMMENTS=${{ steps.aireviewer.outputs.countComments }}"

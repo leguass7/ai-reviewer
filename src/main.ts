@@ -19,11 +19,15 @@ export async function run(): Promise<void> {
     const topicResults = await Promise.all(contents.map(content => topicManager.syncTopic(content)));
 
     const aiComments = await topicManager.codeAnalyzer.analyze(topicResults);
+    const totalComments = aiComments.reduce((acc, comment) => acc + comment?.reviews?.length, 0);
 
-    const urls = aiComments.map(comment => comment.htmlUrl).join(', ');
+    const urls = aiComments
+      .map(comment => comment?.htmlUrl)
+      .filter(Boolean)
+      .join(', ');
     // Set outputs for other workflow steps to use
     core.setOutput('commentUrl', urls);
-    core.setOutput('countComments', aiComments?.length);
+    core.setOutput('countComments', totalComments);
     core.setOutput('countFiles', contents?.length);
 
     process.exit(0);
