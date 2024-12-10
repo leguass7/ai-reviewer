@@ -26,9 +26,11 @@
     "@actions/github": "^6.0.0",
     "@octokit/rest": "^21.0.2",
     "minimatch": "^10.0.1",
+    "mysql2": "^3.11.5",
     "openai": "^4.72.0",
     "p-queue": "^8.0.1",
-    "parse-diff": "^0.11.1"
+    "parse-diff": "^0.11.1",
+    "typeorm": "^0.3.20"
   },
   "devDependencies": {
     "@github/local-action": "^2.2.0",
