@@ -156,7 +156,7 @@ export class GitHubService {
   async deleteReviewFileComments(filename?: string) {
     const comments = (await this.getReviewComments(filename)) || [];
     const deleted = await Promise.all(comments?.map?.(comment => this.deleteReviewComment(comment.id)));
-    core.info(`Deleted '${deleted.length}' comments for '${filename}'`);
+    core.info(`Deleted '${deleted?.length}' comments for '${filename}'`);
     return deleted.every(Boolean);
   }
 
