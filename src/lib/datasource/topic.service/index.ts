@@ -38,7 +38,7 @@ export class TopicService {
   }
 
   async findOne(where: FindOptionsWhere<Topic>) {
-    const query = this.topicRepository.createQueryBuilder('topic').select().leftJoinAndSelect('topic.messages', 'messages');
+    const query = this.topicRepository.createQueryBuilder('topic').select().leftJoinAndSelect('topic.messages', 'messages').where(where);
     return query.getOne();
   }
   //

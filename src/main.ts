@@ -1,10 +1,12 @@
 import * as core from '@actions/core';
 import { assemblesContentToAnalyze } from './lib/content';
 import { parsedDifference } from './lib/diff';
-import { Comment, createReviewComment, getPRDetails } from './lib/github';
 import { createTopicManager } from './lib/topic-manager';
 import { ValidTopic } from './lib/topic-manager/topic-manager.interface';
 import { bodyComment } from './lib/openai/prompt';
+import { GitHubService } from './lib/github/github.service';
+import { createGithubService } from './lib/github';
+import { Comment, createReviewComment } from './lib/github_old';
 
 /**
  * The main function for the action.
@@ -12,16 +14,24 @@ import { bodyComment } from './lib/openai/prompt';
  */
 export async function run(): Promise<void> {
   try {
-    const prDetails = await getPRDetails();
-    const parsedDiff = await parsedDifference(prDetails);
-    const contents = assemblesContentToAnalyze(parsedDiff, prDetails);
+    const githubService = createGithubService();
+    const pullRequestDetails = await githubService.getPullRequestDetails();
+    const parsedDiff = await githubService.parsedDifference();
 
-    const topicManager = await createTopicManager(prDetails);
+    const contents = assemblesContentToAnalyze(parsedDiff, pullRequestDetails);
+
+    const topicManager = await createTopicManager(pullRequestDetails);
     const topicResults = await Promise.all(contents.map(content => topicManager.syncTopic(content)));
     console.log('topicResults', topicResults?.length);
 
     topicResults.forEach(comment => {
-      console.log('topicResults', comment.topicId, comment.success, comment.isDeleted);
+      console.log(
+        'topicResults: ',
+        `file=${comment.filename}`,
+        `topicId=${comment.topicId}`,
+        `success=${comment.success}`,
+        `isDeleted=${comment.isDeleted}`
+      );
     });
 
     const validTopics = topicResults.filter(({ isDeleted, success, topicId }) => !isDeleted && success && topicId) as ValidTopic[];
@@ -42,7 +52,7 @@ export async function run(): Promise<void> {
       return acc;
     }, [] as Comment[]);
 
-    const comments = await createReviewComment(prDetails, commentList);
+    const comments = await createReviewComment(pullRequestDetails, commentList);
 
     // Set outputs for other workflow steps to use
     core.setOutput('commentUrl', comments?.url);
