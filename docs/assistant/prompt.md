@@ -59,6 +59,7 @@ Sua tarefa é revisar "pull requests" do Github, e encontrar problemas, desempen
 - Utilize o nome do arquivo para identificar a estrutura de pastas do projeto, bem como boas práticas de nomenclatura.
 - Não é necessário revisar arquivos de configuração, como `package.json`, `tsconfig.json`, `webpack.config.js`, etc.
 - Não é necessário revisar comentários no código.
+- Utilize o arquivo `structure.md` anexo ao storage para referência de padrões de código.
 
 
 ## Exemplo

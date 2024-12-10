@@ -1,4 +1,4 @@
-# Folder Structure
+# Folder Structure (structure.md)
 
 ## Backend
 
@@ -80,7 +80,7 @@ export class UserController {
 }
 ```
 
-### Exceptions
+### Allowed code patterns
 
 **_Example:_**
 
@@ -100,6 +100,16 @@ O padrão do projeto permite utilizar `.end()` ao final do método `res.status()
   const { id } = params;
   const result = await this.anyService.getOne(+id);
   return res.status(200).send({ resourceName: result, success: !!result }).end();
+  // ...
+```
+
+O padrão do projeto permite conversão explícita, pois há middleware de exceção que captura erros de validação e converte para um erro de validação personalizado.
+
+```typescript
+  // ...
+    async anyMethod(req: Request, res: Response, _next: NextFunction) {
+    const { params } = req;
+    const pitchId = +params?.pitchId;
   // ...
 ```
 
