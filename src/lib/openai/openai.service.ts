@@ -73,7 +73,7 @@ export class OpenAiService {
 
     stream.on('error', async error => {
       const result: RunnerResultError = { error: error?.message, threadId };
-      // console.error('configureStream error', threadId, error);
+      console.error('configureStream error', threadId, error);
       resolve({ ...result, success: false });
     });
   }
@@ -129,7 +129,7 @@ export class OpenAiService {
     const waiting = new Promise(async resolve => {
       await wait(timeout - 10);
       // eslint-disable-next-line no-console
-      console.log('RUNNER TIMEOUT', threadId);
+      console.log('RUNNER TIMEOUT', threadId, `${timeout}ms`);
       return resolve({ success: false, threadId, error: 'Timeout' });
     });
 
