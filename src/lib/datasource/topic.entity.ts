@@ -26,6 +26,13 @@ export const TopicEntity = new EntitySchema<Topic>({
       nullable: false
     }
   },
+  indices: [
+    {
+      name: 'idx_topic_projectId',
+      unique: false,
+      columns: ['projectId']
+    }
+  ],
   relations: {
     messages: {
       target: 'topic-message',
