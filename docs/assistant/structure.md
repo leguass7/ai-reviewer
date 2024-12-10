@@ -1,4 +1,4 @@
-# Folder Structure
+# Folder Structure (structure.md)
 
 ## Backend
 
@@ -79,6 +79,40 @@ export class UserController {
   }
 }
 ```
+
+### Allowed code patterns
+
+**_Example:_**
+
+O padrão do projeto permite lançar exceções personalizadas, que são capturadas pelo middleware de exceções e tratadas de acordo com o status e a mensagem definidos.
+
+```typescript
+  // ...
+  const resourceFound = await this.anyService.getOne(+id);
+  if (!resourceFound) throw new HttpException(400, ErrMsg.noFound);
+  // ...
+```
+
+O padrão do projeto permite utilizar `.end()` ao final do método `res.status().send()`.
+
+```typescript
+  // ...
+  const { id } = params;
+  const result = await this.anyService.getOne(+id);
+  return res.status(200).send({ resourceName: result, success: !!result }).end();
+  // ...
+```
+
+O padrão do projeto permite conversão explícita, pois há middleware de exceção que captura erros de validação e converte para um erro de validação personalizado.
+
+```typescript
+  // ...
+    async anyMethod(req: Request, res: Response, _next: NextFunction) {
+    const { params } = req;
+    const pitchId = +params?.pitchId;
+  // ...
+```
+
 
 ---
 

@@ -13,7 +13,7 @@ export type CreateRunnerOptions = {
   streamParams?: Partial<RunCreateParamsBaseStream>;
   execTimeout?: number;
   temperature?: number;
-  model?: RunCreateParamsBaseStream['model'];
+  // model?: RunCreateParamsBaseStream['model'];
 };
 
 type RunnerResultError = {
@@ -35,23 +35,29 @@ export type RunnerResult = {
 export type ConfigureStreamResolver = (value: RunnerResult) => void;
 export type ConfigureStreamOptions = { threadId: string };
 
+export type OpenAiOptions = {
+  apiKey: string;
+  assistantId: string;
+  language: string;
+  model?: string;
+};
+
 // timeout padrão de 3 minutos
 const defaultTimeout = 3 * 60 * 1000;
 export class OpenAiService {
   public openai: OpenAI;
 
-  constructor(
-    private readonly apiKey: string,
-    private readonly assistantId: string
-  ) {
-    this.openai = new OpenAI({ apiKey: this.apiKey });
+  constructor(private readonly options: OpenAiOptions) {
+    if (!options.apiKey) throw new Error('OpenAI API Key is required');
+    if (!options.assistantId) throw new Error('Assistant ID is required');
+    this.openai = new OpenAI({ apiKey: options.apiKey });
   }
 
-  private prepareParameters({ additionalInstructions, model = 'gpt-4-turbo' }: Omit<CreateRunnerOptions, 'timeout'>): RunCreateParamsBaseStream {
+  private prepareParameters({ additionalInstructions }: Omit<CreateRunnerOptions, 'timeout'>): RunCreateParamsBaseStream {
     return {
       additional_instructions: additionalInstructions,
-      assistant_id: this.assistantId,
-      model
+      assistant_id: this.options.assistantId,
+      model: this?.options?.model || 'gpt-4-turbo'
     };
   }
 
@@ -67,15 +73,29 @@ export class OpenAiService {
 
     stream.on('error', async error => {
       const result: RunnerResultError = { error: error?.message, threadId };
-      // console.error('configureStream error', threadId, error);
+      console.error('configureStream error', threadId, error);
       resolve({ ...result, success: false });
     });
+  }
+
+  public getOptions() {
+    return this.options;
   }
 
   /** Criar um tópico de conversa na OpenAi */
   public async assistantCreateThread(body?: ThreadCreateParams, options?: RequestOptions<unknown>) {
     try {
       const thread = await this.openai.beta.threads.create(body, options);
+      return thread || null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /** Recuperar um tópico de conversa na OpenAi */
+  public async assistantRetrieveThread(threadId: string) {
+    try {
+      const thread = await this.openai.beta.threads.retrieve(threadId);
       return thread || null;
     } catch (error) {
       return null;
@@ -94,12 +114,12 @@ export class OpenAiService {
   }
 
   /** Criar uma mensagem de usuário no tópico de conversa na OpenAi */
-  public async assistantThreadCreateMessage(threadId: string, body: string, metadata?: Record<string, string>) {
+  public async assistantThreadCreateMessage(threadId: string, body: string, metadata?: Record<string, unknown>) {
     try {
       const message: MessageCreateParams = { role: 'user', content: body, metadata };
       const thread = await this.openai.beta.threads.messages.create(threadId, message);
       return thread || null;
-    } catch {
+    } catch (error: Error | unknown) {
       return null;
     }
   }
@@ -109,7 +129,7 @@ export class OpenAiService {
     const waiting = new Promise(async resolve => {
       await wait(timeout - 10);
       // eslint-disable-next-line no-console
-      console.log('RUNNER TIMEOUT', threadId);
+      console.log('RUNNER TIMEOUT', threadId, `${timeout}ms`);
       return resolve({ success: false, threadId, error: 'Timeout' });
     });
 

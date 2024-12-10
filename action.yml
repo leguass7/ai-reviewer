@@ -29,6 +29,9 @@ inputs:
     description: "Idioma dos comentários"
     required: false
     default: "pt-br"
+  MYSQL_URL:
+    description: "URL do banco de dados MySQL"
+    required: true
 
 outputs:
   countFiles:
