@@ -16,3 +16,9 @@ export type ValidTopic = Content & {
   success: boolean;
   isDeleted?: boolean;
 };
+
+export type TopicMessageCreate = {
+  role: 'user' | 'assistant';
+  content: string;
+  metadata?: Record<string, unknown>;
+};

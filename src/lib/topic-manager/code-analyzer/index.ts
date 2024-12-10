@@ -1,11 +1,11 @@
 import * as core from '@actions/core';
-import { extractJson } from 'src/helpers';
+import { extractJson, stringify } from 'src/helpers';
 import { addQueue, QueueTaskHandler } from 'src/lib/topic-manager/code-analyzer/queue';
-import { AiResponse, TaskResult } from '../../openai/interfaces';
-import { RunnerResult, RunnerResultSuccess } from '../../openai/openai.service';
+import type { AiResponse, TaskResult } from '../../openai/interfaces';
+import type { RunnerResult, RunnerResultSuccess } from '../../openai/openai.service';
 import { createPrompt, getAdditionalInstructions } from '../../openai/prompt';
-import { TopicManager } from '../topic-manager';
-import { PullRequestDetails, ValidTopic } from '../topic-manager.interface';
+import type { TopicManager } from '../topic-manager';
+import type { PullRequestDetails, TopicContent, ValidTopic } from '../topic-manager.interface';
 
 export class CodeAnalyzer {
   constructor(
@@ -21,10 +21,8 @@ export class CodeAnalyzer {
   }
 
   private preparePrompts(contentList: ValidTopic[]) {
-    return contentList.map(item => ({
-      ...item,
-      prompt: createPrompt(item)
-    }));
+    core.info(`Preparing prompts for ${contentList.length} topics`);
+    return contentList.map(item => ({ ...item, prompt: createPrompt(item) }));
   }
 
   private getLanguageInstructions(language = 'pt-br') {
@@ -55,18 +53,30 @@ export class CodeAnalyzer {
     const response = await this.manager.openAiService.assistantCreateRunner(topicId, { additionalInstructions });
     const comment: TaskResult = { ...this.safeReturnDto(response), path: filename, topicId };
 
+    let htmlUrl: string | null = null;
     if (!comment?.success || !comment?.reviews?.length) {
       core.info(`No comments found for ${filename}`);
     } else {
-      const content = JSON.stringify({ reviews: comment?.reviews || [] }, null, 2);
-      await this.manager.createTopicMessage(topicId, { role: 'assistant', content });
+      const metadata = { filename };
+      const content = stringify({ reviews: comment?.reviews || [] });
+      await this.manager.createTopicMessage(topicId, { role: 'assistant', content, metadata });
+
+      const commentCreated = await this.manager.createReviewComments(filename, comment);
+      htmlUrl = commentCreated?.html_url || null;
     }
 
-    return comment;
+    return { ...comment, htmlUrl };
   }
 
-  async analyze(contentList: ValidTopic[]) {
-    const prompts = this.preparePrompts(contentList);
+  private filterValidTopics(topicContents: TopicContent[]) {
+    const validTopics = topicContents.filter(({ isDeleted, success, topicId }) => !isDeleted && success && topicId) as ValidTopic[];
+    core.info(`Filtering valid topics total: ${topicContents?.length}, validTopics: ${validTopics?.length}`);
+    return validTopics;
+  }
+
+  async analyze(contentList: TopicContent[]) {
+    const validTopics = this.filterValidTopics(contentList);
+    const prompts = this.preparePrompts(validTopics);
     const { language } = this.manager.openAiService.getOptions();
     const additionalInstructions = this.getLanguageInstructions(language);
 

@@ -17,5 +17,5 @@ export type AiResponse = {
 };
 
 export type TaskResult = AiResponse & {
-  htmlUrl?: string;
+  htmlUrl?: string | null;
 };

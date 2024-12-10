@@ -1,14 +1,14 @@
 import { readFileSync } from 'fs';
 import * as github from '@actions/github';
 import * as core from '@actions/core';
-import { PRDetails, PREventData } from './github.interface';
+import { Comment, PRDetails, PREventData } from './github.interface';
 import parseDiff, { type File } from 'parse-diff';
 import { minimatch } from 'minimatch';
 import { stringify } from 'src/helpers';
 
 export class GitHubService {
   private octokit: ReturnType<typeof github.getOctokit>;
-  private details: PRDetails | null = null;
+  public details: PRDetails | null = null;
 
   constructor() {
     const token = core.getInput('GITHUB_TOKEN') || process.env.GITHUB_TOKEN;
@@ -17,6 +17,11 @@ export class GitHubService {
       process.exit(1);
     }
     this.octokit = github.getOctokit(token);
+  }
+
+  async init() {
+    await this.getPullRequestDetails();
+    return this;
   }
 
   getEventData(): PREventData {
@@ -130,5 +135,66 @@ export class GitHubService {
     }
 
     return result;
+  }
+
+  async deleteReviewComment(commentId: number) {
+    const { owner, repo } = await this.getPullRequestDetails();
+    try {
+      await this.octokit.rest.pulls.deleteReviewComment({ owner, repo, comment_id: commentId });
+      return true;
+    } catch (error: Error | any) {
+      core.setFailed(`Error deleting review comment: ${error?.message}`);
+      return false;
+    }
+  }
+
+  async deleteReviewFileComments(filename?: string) {
+    const comments = await this.getReviewComments(filename);
+    const deleted = await Promise.all(
+      comments.map(comment => {
+        core.info(`Deleting comment: ${comment.id}`);
+        return this.deleteReviewComment(comment.id);
+      })
+    );
+    return deleted.every(Boolean);
+  }
+
+  async getReviewComments(filename?: string) {
+    const { owner, repo, pullNumber } = await this.getPullRequestDetails();
+    const { data: existingComments } = await this.octokit.rest.pulls.listReviewComments({
+      owner,
+      repo,
+      pull_number: pullNumber
+    });
+    return filename ? existingComments.filter(comment => comment.path === filename) : existingComments;
+  }
+
+  async createReviewComment(filename: string, comments: Comment[]) {
+    const { owner, repo, pullNumber } = this.details as PRDetails;
+    const message = `filename: ${filename}, comments: ${comments?.length}`;
+
+    try {
+      const response = await this.octokit.rest.pulls.createReview({
+        owner,
+        repo,
+        pull_number: pullNumber,
+        comments,
+        event: 'COMMENT'
+      });
+
+      if (!response) {
+        core.info(`Failed to create review: ${message}`);
+        process.exit(0);
+      }
+
+      if (response?.data.html_url) {
+        core.notice(`Review comment created: ${response?.data.html_url}`);
+      }
+
+      return response;
+    } catch (error: any) {
+      core.setFailed(`Failed to create review (${message}): ${error?.message}`);
+      return null;
+    }
   }
 }

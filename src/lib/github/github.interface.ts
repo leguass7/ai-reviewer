@@ -28,3 +28,9 @@ export type PRDetails = {
   baseSha?: string; // before
   headSha?: string; // after
 };
+
+export type Comment = {
+  body: string;
+  path: string;
+  line: number;
+};

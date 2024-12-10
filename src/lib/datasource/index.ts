@@ -16,8 +16,7 @@ export async function getDataSource() {
     core.info('Database connected');
 
     return appDataSource;
-  } catch (error) {
-    // @ts-ignore
+  } catch (error: Error | any) {
     const errorMessage = `Database connection failed: ${error?.message}`;
     core.setFailed(errorMessage);
     process.exit(1);

@@ -1,27 +1,30 @@
-import { ThreadCreateParams } from 'openai/resources/beta/threads/threads';
-import { Content } from '../content.js';
-import { TopicService } from '../datasource/topic.service';
-import { PRDetails } from '../github';
-import { OpenAiService } from '../openai/openai.service';
-import { createFirstThreadMessage } from '../openai/prompt';
+import type { Content } from '../content';
+import type { TopicService } from '../datasource/topic.service';
+
+import type { OpenAiService } from '../openai/openai.service';
+import { bodyComment, createFirstThreadMessage } from '../openai/prompt';
 import * as core from '@actions/core';
-import { TopicMessage } from '../datasource/topic-message.entity';
-import { Topic } from '../datasource/topic.entity';
-import { PullRequestDetails, TopicContent, ValidTopic } from './topic-manager.interface.js';
+import type { TopicMessage } from '../datasource/topic-message.entity';
+import type { Topic } from '../datasource/topic.entity';
+import type { PullRequestDetails, TopicContent, TopicMessageCreate } from './topic-manager.interface';
 import { CodeAnalyzer } from './code-analyzer';
+import type { Comment, GitHubService } from '../github';
+import type { AiComment, TaskResult } from '../openai/interfaces';
 
 export class TopicManager {
   private projectId = 'default';
   private topicMetadata = {};
   private _codeAnalyzer: CodeAnalyzer | null = null;
+  private prDetails: PullRequestDetails;
 
   constructor(
-    private readonly prDetails: PullRequestDetails,
+    private readonly githubService: GitHubService,
     public readonly topicService: TopicService,
     public readonly openAiService: OpenAiService
   ) {
-    this.projectId = `${prDetails.owner}/${prDetails.repo}`;
-    this.topicMetadata = { repo: prDetails.repo, pullNumber: `${prDetails.pullNumber}` };
+    this.prDetails = this.githubService.details as PullRequestDetails;
+    this.projectId = `${this.prDetails.owner}/${this.prDetails.repo}`;
+    this.topicMetadata = { repo: this.prDetails.repo, pullNumber: `${this.prDetails.pullNumber}` };
   }
 
   get codeAnalyzer() {
@@ -151,20 +154,30 @@ export class TopicManager {
     const theadMessage = await this.openAiService.assistantThreadCreateMessage(topicId, content, metadata);
 
     if (!theadMessage?.id) {
-      this.failExit('Create message failed');
+      this.failExit('Create OpenAi message failed');
       return null;
     }
     const message = this.topicService.createMessage(topicId, { content, role, id: theadMessage.id, metadata });
     return message;
   }
 
-  // async createComments(topicId: string, prompt: ValidTopic, additionalInstructions: string) {
-  //   const messageCreated = await this.createTopicMessage(topicId, prompt, 'user');
-  // }
-}
+  async createReviewComments(filename: string, comment: TaskResult) {
+    const reviews = comment?.reviews || [];
 
-type TopicMessageCreate = {
-  role: 'user' | 'assistant';
-  content: string;
-  metadata?: Record<string, unknown>;
-};
+    if (!reviews.length) {
+      core.info(`No comments found for ${filename}`);
+      return null;
+    }
+
+    const filterBody = ({ body }: Comment) => !!body;
+    const commentDto = (review: AiComment) => ({ body: bodyComment(review), path: filename, line: review?.lineNumber });
+
+    // remover todos os comentários de commit de um arquivo específico da PR
+    await this.githubService.deleteReviewFileComments(filename);
+
+    const comments: Comment[] = reviews.map(commentDto).filter(filterBody);
+    const response = await this.githubService.createReviewComment(filename, comments);
+
+    return response?.data || null;
+  }
+}

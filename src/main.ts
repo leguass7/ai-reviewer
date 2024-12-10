@@ -1,6 +1,5 @@
 import * as core from '@actions/core';
 import { assemblesContentToAnalyze } from './lib/content';
-import { parsedDifference } from './lib/diff';
 import { createTopicManager } from './lib/topic-manager';
 import { ValidTopic } from './lib/topic-manager/topic-manager.interface';
 import { bodyComment } from './lib/openai/prompt';
@@ -20,43 +19,15 @@ export async function run(): Promise<void> {
 
     const contents = assemblesContentToAnalyze(parsedDiff, pullRequestDetails);
 
-    const topicManager = await createTopicManager(pullRequestDetails);
+    const topicManager = await createTopicManager(githubService);
     const topicResults = await Promise.all(contents.map(content => topicManager.syncTopic(content)));
-    console.log('topicResults', topicResults?.length);
 
-    topicResults.forEach(comment => {
-      console.log(
-        'topicResults: ',
-        `file=${comment.filename}`,
-        `topicId=${comment.topicId}`,
-        `success=${comment.success}`,
-        `isDeleted=${comment.isDeleted}`
-      );
-    });
+    const aiComments = await topicManager.codeAnalyzer.analyze(topicResults);
 
-    const validTopics = topicResults.filter(({ isDeleted, success, topicId }) => !isDeleted && success && topicId) as ValidTopic[];
-
-    console.log('validTopics', validTopics?.length);
-    // process.exit(0);
-
-    const aiComments = await topicManager.codeAnalyzer.analyze(validTopics);
-    const commentList = aiComments.reduce((acc, item) => {
-      if (item?.success && item?.reviews?.length) {
-        if (!!item?.path) {
-          item?.reviews.forEach(review => {
-            if (!!review?.reviewComment) acc.push({ body: bodyComment(review), path: item.path as string, line: review.lineNumber });
-          });
-        }
-      }
-
-      return acc;
-    }, [] as Comment[]);
-
-    const comments = await createReviewComment(pullRequestDetails, commentList);
-
+    const urls = aiComments.map(comment => comment.htmlUrl).join(', ');
     // Set outputs for other workflow steps to use
-    core.setOutput('commentUrl', comments?.url);
-    core.setOutput('countComments', commentList?.length);
+    core.setOutput('commentUrl', urls);
+    core.setOutput('countComments', aiComments?.length);
     core.setOutput('countFiles', contents?.length);
 
     process.exit(0);

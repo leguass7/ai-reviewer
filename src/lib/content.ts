@@ -2,21 +2,10 @@ import type { File, Chunk } from 'parse-diff';
 import type { PRDetails } from './github';
 import * as core from '@actions/core';
 
-// function removeDeletedFilter(file: File) {
-//   const conditions = [
-//     file.to === '/dev/null',
-//     file?.chunks?.length <= 0
-//     //...
-//   ];
-
-//   return !conditions.some(condition => condition);
-// }
-
 function removeInvalidFilter(file: File) {
   const conditions = [
-    // file.to === '/dev/null',
     file?.chunks?.length <= 0
-    //...
+    // ...mais condições
   ];
 
   return !conditions.some(condition => condition);
@@ -45,24 +34,6 @@ export type Content = {
   isDeleted?: boolean;
 };
 
-// export function assemblesContentToAnalyze(parsedDiff: File[], prDetails: PRDetails): Content[] {
-//   const content = parsedDiff.filter(removeDeletedFilter).reduce((acc, file) => {
-//     acc.push({
-//       filename: file.to ?? '',
-//       content: file.chunks.map(chunkToContent).join('\n'),
-//       prTitle: prDetails.title,
-//       prDescription: prDetails.description ?? ''
-//     });
-//     return acc;
-//   }, [] as Content[]);
-
-//   if (!content?.length) {
-//     core.info('No files found to analyze');
-//     process.exit(0);
-//   }
-
-//   return content;
-// }
 export function assemblesContentToAnalyze(parsedDiff: File[], prDetails: PRDetails): Content[] {
   const content = parsedDiff.filter(removeInvalidFilter).reduce((acc, file) => {
     const isDeleted = !file.to || file.to === '/dev/null';
