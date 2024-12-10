@@ -176,6 +176,12 @@ export class GitHubService {
     const { owner, repo, pullNumber } = this.details as PRDetails;
     const message = `filename: ${filename}, comments: ${comments?.length}`;
 
+    const validComments = comments.filter(comment => !!comment?.body && !!comment?.path && !!comment?.line);
+    if (!validComments?.length) {
+      core.warning(`No valid comments found for ${filename}`);
+      return null;
+    }
+
     try {
       const response = await this.octokit.rest.pulls.createReview({
         owner,
