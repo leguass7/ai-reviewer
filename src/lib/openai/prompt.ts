@@ -22,7 +22,7 @@ ${description}
   };
 }
 
-export function createPrompt(content: Content, prDetails: PRDetails): string {
+export function createPrompt(content: Content): string {
   return `
 Git diff para revisão:
 
@@ -35,7 +35,7 @@ ${content.content}
 `;
 }
 
-export function getAdditionalInstructions(language: string): string {
+export function getAdditionalInstructions(language: string = 'pt-br'): string {
   return `IMPORTANTE:
 - Não faça comentários positivos ou elogios;
 - Responda no idiôma '${language}'.`;
