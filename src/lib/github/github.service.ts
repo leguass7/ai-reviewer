@@ -186,8 +186,8 @@ export class GitHubService {
       });
 
       if (!response) {
-        core.info(`Failed to create review: ${message}`);
-        process.exit(0);
+        core.info(`Failed to create review: ${message} `);
+        return null;
       }
 
       if (response?.data.html_url) {
@@ -196,7 +196,7 @@ export class GitHubService {
 
       return response;
     } catch (error: any) {
-      core.setFailed(`Failed to create review (${message}): ${error?.message}`);
+      core.setFailed(`Failed to create review (${message}): ${error?.message} ${stringify(comments)}`);
       return null;
     }
   }

@@ -80,6 +80,30 @@ export class UserController {
 }
 ```
 
+### Exceptions
+
+**_Example:_**
+
+O padrão do projeto permite lançar exceções personalizadas, que são capturadas pelo middleware de exceções e tratadas de acordo com o status e a mensagem definidos.
+
+```typescript
+  // ...
+  const resourceFound = await this.anyService.getOne(+id);
+  if (!resourceFound) throw new HttpException(400, ErrMsg.noFound);
+  // ...
+```
+
+O padrão do projeto permite utilizar `.end()` ao final do método `res.status().send()`.
+
+```typescript
+  // ...
+  const { id } = params;
+  const result = await this.anyService.getOne(+id);
+  return res.status(200).send({ resourceName: result, success: !!result }).end();
+  // ...
+```
+
+
 ---
 
 ## Frontend
