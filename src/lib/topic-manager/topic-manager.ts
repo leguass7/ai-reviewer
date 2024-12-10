@@ -174,18 +174,18 @@ export class TopicManager {
   async createReviewComments(filename: string, comment: TaskResult) {
     const reviews = comment?.reviews || [];
 
-    if (!reviews.length) {
-      core.info(`No comments found for ${filename}`);
-      return null;
-    }
+    // remover todos os comentários de commit de um arquivo específico da PR
+    await this.githubService.deleteReviewFileComments(filename);
 
     const filterBody = ({ body }: Comment) => !!body;
     const commentDto = (review: AiComment) => ({ body: bodyComment(review), path: filename, line: review?.lineNumber });
 
-    // remover todos os comentários de commit de um arquivo específico da PR
-    await this.githubService.deleteReviewFileComments(filename);
-
     const comments: Comment[] = reviews.map(commentDto).filter(filterBody);
+    if (!comments.length) {
+      core.info(`No comments found for ${filename}`);
+      return null;
+    }
+
     const response = await this.githubService.createReviewComment(filename, comments);
 
     return response?.data || null;

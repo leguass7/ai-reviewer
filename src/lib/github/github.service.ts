@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import * as github from '@actions/github';
 import * as core from '@actions/core';
-import { Comment, PRDetails, PREventData } from './github.interface';
+import type { Comment, PRDetails, PREventData } from './github.interface';
 import parseDiff, { type File } from 'parse-diff';
 import { minimatch } from 'minimatch';
 import { stringify } from 'src/helpers';
@@ -155,10 +155,10 @@ export class GitHubService {
     const comments = await this.getReviewComments(filename);
     const deleted = await Promise.all(
       comments.map(comment => {
-        core.info(`Deleting comment: ${comment.id}`);
         return this.deleteReviewComment(comment.id);
       })
     );
+    core.info(`Deleting '${deleted.length}' comments for '${filename}'`);
     return deleted.every(Boolean);
   }
 
@@ -191,7 +191,7 @@ export class GitHubService {
       }
 
       if (response?.data.html_url) {
-        core.notice(`Review comment created: ${response?.data.html_url}`);
+        core.notice(`Review comment created ${comments?.length} for ${filename} ${response?.data.html_url}`);
       }
 
       return response;
