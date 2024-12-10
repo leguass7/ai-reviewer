@@ -106,7 +106,7 @@ export class GitHubService {
         baseSha: before || response?.data?.base?.sha,
         headSha: after || response?.data?.head?.sha
       };
-      core.notice(`PR Details: ${this.details.repo}/${this.details.pullNumber}${this.details.pullNumber}`);
+      core.notice(`PR Details: ${this.details.owner}/${this.details.repo}#${this.details.pullNumber}`);
       return this.details;
     } catch (error: Error | any) {
       core.setFailed(`Error getting PR details: ${error?.message}`);
