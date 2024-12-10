@@ -141,6 +141,8 @@ export class GitHubService {
   }
 
   async deleteReviewComment(commentId: number) {
+    if (!commentId) return false;
+
     const { owner, repo } = await this.getPullRequestDetails();
     try {
       await this.octokit.rest.pulls.deleteReviewComment({ owner, repo, comment_id: commentId });
@@ -152,13 +154,9 @@ export class GitHubService {
   }
 
   async deleteReviewFileComments(filename?: string) {
-    const comments = await this.getReviewComments(filename);
-    const deleted = await Promise.all(
-      comments.map(comment => {
-        return this.deleteReviewComment(comment.id);
-      })
-    );
-    core.info(`Deleting '${deleted.length}' comments for '${filename}'`);
+    const comments = (await this.getReviewComments(filename)) || [];
+    const deleted = await Promise.all(comments?.map?.(comment => this.deleteReviewComment(comment.id)));
+    core.info(`Deleted '${deleted.length}' comments for '${filename}'`);
     return deleted.every(Boolean);
   }
 
@@ -169,10 +167,10 @@ export class GitHubService {
       repo,
       pull_number: pullNumber
     });
-    return filename ? existingComments.filter(comment => comment.path === filename) : existingComments;
+    return filename ? existingComments.filter(comment => comment?.path === filename) : existingComments;
   }
 
-  async createReviewComment(filename: string, comments: Comment[]) {
+  async createReviewComment(filename: string, comments: Comment[] = []) {
     const { owner, repo, pullNumber } = this.details as PRDetails;
     const message = `filename: ${filename}, comments: ${comments?.length}`;
 
